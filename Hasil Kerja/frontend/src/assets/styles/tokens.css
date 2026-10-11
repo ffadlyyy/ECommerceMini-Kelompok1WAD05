@@ -1,0 +1,89 @@
+/* ==========================================================================
+   DESIGN TOKENS — satu-satunya sumber warna, font, spacing, radius.
+   Semua komponen (termasuk milik anggota lain) wajib memakai variabel ini,
+   jangan menulis warna/ukuran hex manual di komponen.
+   ========================================================================== */
+:root {
+  /* Warna */
+  --color-bg: #fff9f2;
+  --color-surface: #fffdf8;
+  --color-ink: #413333;
+  --color-ink-soft: #7a6a5e;
+  --color-muted: #f3e6d5;
+  --color-accent: #a1552f;
+  --color-line: #ebdfca;
+  --color-on-ink: #fff9f2;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbeae8;
+  --color-success: #2e7d4f;
+  --color-success-bg: #e6f3ec;
+  --color-star: #c98a1b;
+
+  /* Tipografi */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Spacing (skala 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Bentuk */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --container: 1200px;
+  --gutter: 28px;
+  --header-h: 68px;
+
+  --shadow-soft: 0 10px 30px -14px rgba(65, 51, 51, 0.28);
+  --transition: 0.15s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #221a15;
+    --color-surface: #2a201a;
+    --color-ink: #f3e6d5;
+    --color-ink-soft: #c3b1a0;
+    --color-muted: #3a2c22;
+    --color-accent: #e28a5c;
+    --color-line: #3a2c22;
+    --color-on-ink: #221a15;
+    --color-danger: #f2a39d;
+    --color-danger-bg: #3d2220;
+    --color-success: #8fd1a8;
+    --color-success-bg: #1f3328;
+    --color-star: #e6b04a;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #221a15;
+  --color-surface: #2a201a;
+  --color-ink: #f3e6d5;
+  --color-ink-soft: #c3b1a0;
+  --color-muted: #3a2c22;
+  --color-accent: #e28a5c;
+  --color-line: #3a2c22;
+  --color-on-ink: #221a15;
+  --color-danger: #f2a39d;
+  --color-danger-bg: #3d2220;
+  --color-success: #8fd1a8;
+  --color-success-bg: #1f3328;
+  --color-star: #e6b04a;
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gutter: 18px;
+  }
+}
