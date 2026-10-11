@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nook — Everyday objects for a slower home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FFF9F2;
+    --surface: #FFFDF8;
+    --ink: #413333;
+    --ink-soft: #7a6a5e;
+    --icon-bg: #F3E6D5;
+    --accent: #a1552f;
+    --line: #ebdfca;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #221a15;
+      --surface: #2a201a;
+      --ink: #f3e6d5;
+      --ink-soft: #c3b1a0;
+      --icon-bg: #3a2c22;
+      --accent: #e28a5c;
+      --line: #3a2c22;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #221a15;
+    --surface: #2a201a;
+    --ink: #f3e6d5;
+    --ink-soft: #c3b1a0;
+    --icon-bg: #3a2c22;
+    --accent: #e28a5c;
+    --line: #3a2c22;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img{max-width:100%; display:block;}
+  a{color:inherit; text-decoration:none;}
+  ul{list-style:none;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  .wrap{ max-width:1200px; margin:0 auto; padding:0 28px; }
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:500; line-height:1.15; letter-spacing:-0.01em; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- Announcement bar ---------- */
+  .announce{
+    background: var(--ink);
+    color: var(--bg);
+    text-align:center;
+    font-size:13px;
+    padding:9px 16px;
+    letter-spacing:0.01em;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position: sticky; top:0; z-index:50;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 28px;
+    max-width:1200px; margin:0 auto;
+    gap: 24px;
+  }
+  .logo{
+    font-family:'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space:nowrap;
+  }
+  .logo span{ color: var(--accent); font-style: italic; font-weight:500; }
+  nav.main-links{ display:flex; gap:32px; }
+  nav.main-links a{
+    font-size:14.5px;
+    color: var(--ink-soft);
+    transition: color .15s ease;
+    position:relative;
+  }
+  nav.main-links a:hover{ color: var(--ink); }
+  .nav-actions{ display:flex; align-items:center; gap:10px; }
+  .icon-btn{
+    width:40px; height:40px;
+    border-radius:50%;
+    background: var(--icon-bg);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    flex-shrink:0;
+    transition: transform .15s ease;
+  }
+  .icon-btn:hover{ transform: translateY(-2px); }
+  .icon-btn svg{ width:18px; height:18px; stroke: var(--ink); fill:none; stroke-width:1.6; }
+  .cart-count{
+    position:absolute; top:-4px; right:-4px;
+    background: var(--accent); color: var(--bg);
+    font-size:10px; font-weight:600;
+    width:17px; height:17px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .burger{ display:none; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding: 76px 0 88px;
+    overflow:hidden;
+  }
+  .hero .wrap{
+    display:grid;
+    grid-template-columns: 1fr 0.92fr;
+    gap: 64px;
+    align-items:center;
+  }
+  .hero-copy{ animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes rise{ from{ opacity:0; transform: translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  .hero h1{
+    font-size: clamp(36px, 5vw, 58px);
+    max-width: 12ch;
+    margin-bottom: 22px;
+  }
+  .hero p.lede{
+    font-size:17px; color: var(--ink-soft);
+    max-width:46ch; line-height:1.6;
+    margin-bottom:32px;
+  }
+  .hero-ctas{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; margin-bottom: 34px;}
+  .btn-primary{
+    background: var(--ink); color: var(--bg);
+    padding: 14px 26px; border-radius: 999px;
+    font-size:14.5px; font-weight:500;
+    display:inline-block;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .btn-primary:hover{ opacity:.86; transform: translateY(-1px); }
+  .btn-text{
+    font-size:14.5px; font-weight:500;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom:2px;
+  }
+  .hero-trust{ font-size:13.5px; color: var(--ink-soft); max-width:42ch; line-height:1.5; }
+
+  .hero-visual{ position:relative; }
+  .hero-illo{
+    background: var(--icon-bg);
+    border-radius: 28px;
+    aspect-ratio: 1/1;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .hero-illo svg{ width:78%; height:78%; }
+  .hero-chip{
+    position:absolute; bottom:-18px; left:-18px;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding: 14px 18px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow: 0 10px 30px -14px rgba(65,51,51,0.28);
+  }
+  .hero-chip .dot{ width:34px; height:34px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .hero-chip .t1{ font-size:12.5px; color:var(--ink-soft); }
+  .hero-chip .t2{ font-size:14px; font-weight:600; }
+
+  /* ---------- Section heading ---------- */
+  .section{ padding: 64px 0; }
+  .section-head{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap: 20px; margin-bottom: 36px; flex-wrap:wrap;
+  }
+  .section-head h2{ font-size: clamp(26px, 3vw, 34px); }
+  .section-head p{ color: var(--ink-soft); font-size:14.5px; margin-top:6px; max-width:42ch; }
+  .see-all{ font-size:14px; font-weight:500; border-bottom:1px solid var(--ink); padding-bottom:2px; white-space:nowrap; }
+
+  /* ---------- Category strip ---------- */
+  .cat-grid{
+    display:grid; grid-template-columns: repeat(6, 1fr); gap:16px;
+  }
+  .cat-tile{
+    text-align:center; padding: 26px 10px;
+    border:1px solid var(--line); border-radius: 18px;
+    background: var(--surface);
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .cat-tile:hover{ border-color: var(--ink); transform: translateY(-3px); }
+  .cat-tile .cat-icon{
+    width:52px; height:52px; border-radius:50%;
+    background: var(--icon-bg);
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 14px;
+  }
+  .cat-tile svg{ width:22px; height:22px; stroke: var(--ink); fill:none; stroke-width:1.5; }
+  .cat-tile span{ font-size:13.5px; font-weight:500; }
+
+  /* ---------- Product grid ---------- */
+  .prod-grid{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap:24px;
+  }
+  .prod-card{
+    border:1px solid var(--line);
+    border-radius:20px;
+    overflow:hidden;
+    background: var(--surface);
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .prod-card:hover{ border-color: var(--ink); transform: translateY(-4px); }
+  .prod-media{
+    aspect-ratio: 4/3.4;
+    background: var(--icon-bg);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .prod-media svg{ width:44%; height:44%; stroke: var(--ink); fill:none; stroke-width:1.4; }
+  .tag{
+    position:absolute; top:14px; left:14px;
+    background: var(--ink); color: var(--bg);
+    font-size:11px; font-weight:600;
+    padding: 5px 10px; border-radius:999px;
+  }
+  .wish{
+    position:absolute; top:12px; right:12px;
+    width:32px; height:32px; border-radius:50%;
+    background: var(--surface);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wish svg{ width:15px; height:15px; stroke: var(--ink); fill:none; stroke-width:1.6; }
+  .prod-info{ padding: 18px 20px 20px; }
+  .prod-info .cat{ font-size:12px; color: var(--ink-soft); margin-bottom:5px; }
+  .prod-info h3{ font-family:'Inter',sans-serif; font-weight:600; font-size:15.5px; margin-bottom:8px; }
+  .price-row{ display:flex; align-items:center; justify-content:space-between; }
+  .price{ font-weight:600; font-size:15px; }
+  .price .old{ text-decoration:line-through; color: var(--ink-soft); font-weight:400; font-size:13px; margin-left:6px; }
+  .add-btn{
+    font-size:12.5px; font-weight:500;
+    border: 1px solid var(--ink); border-radius:999px;
+    padding: 8px 14px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .add-btn:hover{ background: var(--ink); color: var(--bg); }
+  .add-btn.added{ background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+  /* ---------- Promo split ---------- */
+  .promo-split{ display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+  .promo-card{
+    border-radius:24px;
+    padding: 44px 38px;
+    min-height: 260px;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    position:relative;
+    overflow:hidden;
+  }
+  .promo-card.dark{ background: var(--ink); color: var(--bg); }
+  .promo-card.light{ background: var(--icon-bg); color: var(--ink); }
+  .promo-card h3{ font-size: clamp(22px,2.4vw,28px); max-width:14ch; margin-bottom:10px; }
+  .promo-card p{ font-size:14px; opacity:.8; margin-bottom:20px; max-width: 30ch; }
+  .promo-card .btn-text{ border-color: currentColor; }
+  .promo-deco{ position:absolute; top:-30px; right:-30px; width:180px; height:180px; opacity:.5; }
+  .promo-deco svg{ width:100%; height:100%; }
+
+  /* ---------- Values strip ---------- */
+  .values{
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding: 44px 0;
+  }
+  .values .wrap{ display:grid; grid-template-columns: repeat(3,1fr); gap:32px; }
+  .value-item{ display:flex; gap:16px; align-items:flex-start; }
+  .value-item .vi{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    background: var(--icon-bg);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .value-item svg{ width:19px; height:19px; stroke: var(--ink); fill:none; stroke-width:1.5; }
+  .value-item h4{ font-family:'Inter'; font-size:14.5px; font-weight:600; margin-bottom:4px; }
+  .value-item p{ font-size:13px; color: var(--ink-soft); line-height:1.5; }
+
+  /* ---------- Newsletter ---------- */
+  .newsletter{ padding: 70px 0; text-align:center; }
+  .newsletter h2{ font-size: clamp(26px,3.4vw,36px); max-width:18ch; margin:0 auto 12px; }
+  .newsletter p{ color: var(--ink-soft); max-width:44ch; margin: 0 auto 28px; font-size:14.5px; }
+  .nl-form{
+    display:flex; max-width:420px; margin:0 auto;
+    border:1px solid var(--ink); border-radius:999px; overflow:hidden;
+  }
+  .nl-form input{
+    flex:1; border:none; background:none; padding:14px 20px;
+    font-family:'Inter'; font-size:14px; color: var(--ink); outline:none;
+  }
+  .nl-form input::placeholder{ color: var(--ink-soft); }
+  .nl-form button{
+    background: var(--ink); color: var(--bg);
+    padding: 14px 24px; font-size:14px; font-weight:500; flex-shrink:0;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{ background: var(--ink); color: var(--bg); padding: 60px 0 26px; }
+  .foot-grid{
+    display:grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 32px;
+    padding-bottom: 40px; border-bottom: 1px solid rgba(255,249,242,0.15);
+  }
+  .foot-brand .logo{ color: var(--bg); margin-bottom:14px; }
+  .foot-brand p{ font-size:13.5px; opacity:.72; max-width:32ch; line-height:1.6; }
+  .foot-col h5{ font-size:13.5px; font-weight:600; margin-bottom:16px; }
+  .foot-col ul li{ margin-bottom:10px; }
+  .foot-col a{ font-size:13.5px; opacity:.75; transition:opacity .15s ease; }
+  .foot-col a:hover{ opacity:1; }
+  .foot-bottom{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:22px; flex-wrap:wrap; gap:14px;
+  }
+  .foot-bottom p{ font-size:12.5px; opacity:.6; }
+  .socials{ display:flex; gap:10px; }
+  .socials a{
+    width:34px; height:34px; border-radius:50%;
+    border:1px solid rgba(255,249,242,0.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .socials svg{ width:14px; height:14px; stroke: var(--bg); fill:none; stroke-width:1.5; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 980px){
+    .hero .wrap{ grid-template-columns:1fr; gap:44px; }
+    .hero-visual{ order:-1; max-width:420px; margin:0 auto; }
+    .cat-grid{ grid-template-columns: repeat(3,1fr); }
+    .prod-grid{ grid-template-columns: repeat(2,1fr); }
+    .promo-split{ grid-template-columns:1fr; }
+    .foot-grid{ grid-template-columns: 1fr 1fr; }
+    .foot-brand{ grid-column: span 2; }
+  }
+  @media (max-width: 720px){
+    nav.main-links{ display:none; }
+    .burger{ display:flex; width:40px; height:40px; border-radius:50%; background:var(--icon-bg); align-items:center; justify-content:center; }
+    .burger span{ display:block; width:16px; height:1.5px; background:var(--ink); position:relative; }
+    .burger span::before, .burger span::after{ content:""; position:absolute; width:16px; height:1.5px; background:var(--ink); left:0; }
+    .burger span::before{ top:-5px; }
+    .burger span::after{ top:5px; }
+    .values .wrap{ grid-template-columns:1fr; gap:24px; }
+    .cat-grid{ grid-template-columns: repeat(2,1fr); }
+  }
+  @media (max-width: 560px){
+    .prod-grid{ grid-template-columns: 1fr; }
+    .nl-form{ flex-direction:column; border-radius:20px; }
+    .nl-form button{ border-radius:0 0 18px 18px; }
+    .foot-grid{ grid-template-columns:1fr; }
+    .foot-brand{ grid-column: span 1; }
+  }
+
+  /* mobile menu overlay */
+  .mobile-menu{
+    position:fixed; inset:0; background: var(--bg); z-index:100;
+    display:flex; flex-direction:column; padding: 24px 28px;
+    transform: translateY(-100%); transition: transform .3s ease;
+  }
+  .mobile-menu.open{ transform: translateY(0); }
+  .mobile-menu .mm-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:40px; }
+  .mobile-menu a{ font-family:'Fraunces', serif; font-size:26px; padding: 14px 0; border-bottom:1px solid var(--line); }
+  .close-btn{ width:40px; height:40px; border-radius:50%; background:var(--icon-bg); display:flex; align-items:center; justify-content:center; }
+  .close-btn svg{ width:16px; height:16px; stroke:var(--ink); stroke-width:1.6; }
+</style>
+</head>
+<body>
+
+<div class="announce">Gratis ongkir untuk belanja di atas Rp750.000 — pesanan dikirim dalam 2 hari kerja</div>
+
+<header>
+  <div class="nav-row">
+    <a href="#" class="logo">no<span>o</span>k</a>
+    <nav class="main-links">
+      <a href="#new">Baru datang</a>
+      <a href="#shop">Belanja</a>
+      <a href="#rooms">Ruang</a>
+      <a href="#best">Terlaris</a>
+      <a href="#journal">Jurnal</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn" aria-label="Cari">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Akun">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.3-3.6 4-5.5 7-5.5s5.7 1.9 7 5.5"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Keranjang" id="cartBtn">
+        <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span class="cart-count" id="cartCount">2</span>
+      </button>
+      <button class="burger" id="burgerBtn" aria-label="Menu"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mm-top">
+    <a href="#" class="logo" style="padding:0;border:none;">no<span>o</span>k</a>
+    <button class="close-btn" id="closeMenu"><svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg></button>
+  </div>
+  <a href="#new">Baru datang</a>
+  <a href="#shop">Belanja</a>
+  <a href="#rooms">Ruang</a>
+  <a href="#best">Terlaris</a>
+  <a href="#journal">Jurnal</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <h1>Ruang yang terasa seperti napas lega.</h1>
+      <p class="lede">Furnitur dan perlengkapan sehari-hari untuk rumah yang lebih tenang, hangat, dan terasa lebih "kamu". Dipilih satu per satu, bukan sekadar mengisi rak.</p>
+      <div class="hero-ctas">
+        <a href="#new" class="btn-primary">Lihat koleksi baru</a>
+        <a href="#shop" class="btn-text">Jelajahi semua produk</a>
+      </div>
+      <p class="hero-trust">Kurasi tangan pertama, dikirim dalam 2 hari, dengan pengembalian mudah selama 30 hari.</p>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-illo">
+        <svg viewBox="0 0 200 200" fill="none">
+          <path d="M20 170 Q100 150 180 170" stroke="#413333" stroke-width="1.4" opacity="0.35"/>
+          <path d="M55 170 V110 Q55 90 78 90 H110 Q130 90 130 110 V170" stroke="#413333" stroke-width="1.6"/>
+          <path d="M55 130 H130" stroke="#413333" stroke-width="1.6"/>
+          <path d="M48 170 V150 M137 170 V150" stroke="#413333" stroke-width="1.6"/>
+          <line x1="150" y1="60" x2="150" y2="170" stroke="#413333" stroke-width="1.6"/>
+          <path d="M150 60 Q135 40 150 25 Q165 40 150 60Z" stroke="#a1552f" stroke-width="1.6"/>
+          <circle cx="150" cy="170" r="5" stroke="#413333" stroke-width="1.4"/>
+          <path d="M30 100 C 20 80 28 55 45 50 C 55 40 72 48 68 65 C 80 62 85 82 68 90 C 66 105 40 108 30 100Z" stroke="#413333" stroke-width="1.5"/>
+          <line x1="45" y1="90" x2="45" y2="150" stroke="#413333" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="hero-chip">
+        <div class="dot"></div>
+        <div>
+          <div class="t1">Sedang laris</div>
+          <div class="t2">Lounge Chair Rotan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section" id="rooms">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>Belanja per ruang</h2>
+        <p>Mulai dari satu sudut, atau lengkapi seluruh rumah.</p>
+      </div>
+    </div>
+    <div class="cat-grid">
+      <a class="cat-tile" href="#">
+        <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M4 18V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8"/><path d="M2 18h20"/><path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg></div>
+        <span>Ruang tamu</span>
+      </a>
+      <a class="cat-tile" href="#">
+        <div class="cat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="9"/><path d="M6 9h12l3 11H3L6 9z"/></svg></div>
+        <span>Pencahayaan</span>
+      </a>
+      <a class="cat-tile" href="#">
+        <div class="cat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M4 17c1-3 15-3 16 0"/></svg></div>
+        <span>Tekstil</span>
+      </a>
+      <a class="cat-tile" href="#">
+        <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M6 3h12l-1 9a5 5 0 0 1-10 0L6 3z"/><path d="M9 3v3M15 3v3"/></svg></div>
+        <span>Meja makan</span>
+      </a>
+      <a class="cat-tile" href="#">
+        <div class="cat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></div>
+        <span>Penyimpanan</span>
+      </a>
+      <a class="cat-tile" href="#">
+        <div class="cat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>
+        <span>Dekorasi</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- NEW ARRIVALS -->
+<section class="section" id="new">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>Baru datang minggu ini</h2>
+        <p>Barang-barang segar yang baru sampai di gudang kami.</p>
+      </div>
+      <a href="#shop" class="see-all">Lihat semua</a>
+    </div>
+    <div class="prod-grid" id="shop">
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <span class="tag">Baru</span>
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><ellipse cx="50" cy="30" rx="18" ry="14"/><line x1="50" y1="44" x2="50" y2="78"/><ellipse cx="50" cy="82" rx="16" ry="4"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Pencahayaan</div>
+          <h3>Lampu Meja Linen</h3>
+          <div class="price-row">
+            <span class="price">Rp620.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><path d="M25 80V52a10 10 0 0 1 10-10h30a10 10 0 0 1 10 10v28"/><path d="M25 62h50"/><line x1="20" y1="80" x2="20" y2="68"/><line x1="80" y1="80" x2="80" y2="68"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Ruang tamu</div>
+          <h3>Kursi Santai Rotan</h3>
+          <div class="price-row">
+            <span class="price">Rp3.850.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <span class="tag">Baru</span>
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><path d="M35 45c0-8 6-14 15-14s15 6 15 14v28a4 4 0 0 1-4 4H39a4 4 0 0 1-4-4V45z"/><path d="M62 50c8 0 12 5 12 10s-6 8-12 6"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Meja makan</div>
+          <h3>Set Mug Keramik</h3>
+          <div class="price-row">
+            <span class="price">Rp290.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><path d="M40 80V55c0-10 4-18 10-24 6 6 10 14 10 24v25" /><path d="M30 80h40" /><path d="M50 55c-10-2-16-12-14-22 10 0 18 8 18 18" /><path d="M50 55c10-2 16-12 14-22-10 0-18 8-18 18"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Dekorasi</div>
+          <h3>Tanaman Pakis Sintetis</h3>
+          <div class="price-row">
+            <span class="price">Rp485.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><path d="M28 40h44l-6 40H34l-6-40z"/><path d="M28 40l6-4h32l6 4"/><line x1="36" y1="46" x2="40" y2="76"/><line x1="50" y1="46" x2="50" y2="76"/><line x1="64" y1="46" x2="60" y2="76"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Penyimpanan</div>
+          <h3>Keranjang Anyaman Pasar</h3>
+          <div class="price-row">
+            <span class="price">Rp410.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <span class="tag">Baru</span>
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><ellipse cx="50" cy="42" rx="22" ry="28"/><ellipse cx="50" cy="42" rx="16" ry="22"/><line x1="50" y1="70" x2="50" y2="82"/><line x1="38" y1="82" x2="62" y2="82"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Dekorasi</div>
+          <h3>Cermin Bingkai Kayu Oak</h3>
+          <div class="price-row">
+            <span class="price">Rp1.150.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PROMO SPLIT -->
+<section class="section">
+  <div class="wrap">
+    <div class="promo-split">
+      <div class="promo-card dark">
+        <div class="promo-deco"><svg viewBox="0 0 100 100" fill="none" stroke="#FFF9F2" stroke-width="1"><circle cx="50" cy="50" r="45"/><circle cx="50" cy="50" r="32"/></svg></div>
+        <h3>Edit Akhir Pekan — diskon 20% untuk seating</h3>
+        <p>Berlaku untuk semua kursi dan sofa terpilih, hingga Minggu.</p>
+        <a href="#" class="btn-text">Belanja diskon ini</a>
+      </div>
+      <div class="promo-card light">
+        <div class="promo-deco"><svg viewBox="0 0 100 100" fill="none" stroke="#413333" stroke-width="1"><circle cx="50" cy="50" r="45"/><circle cx="50" cy="50" r="32"/></svg></div>
+        <h3>Musim baru, tekstil baru</h3>
+        <p>Selimut dan sarung bantal bertekstur hangat untuk musim ini.</p>
+        <a href="#" class="btn-text">Lihat koleksi</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEST SELLERS -->
+<section class="section" id="best">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>Favorit pelanggan</h2>
+        <p>Barang yang paling sering kembali dipesan.</p>
+      </div>
+      <a href="#" class="see-all">Lihat semua</a>
+    </div>
+    <div class="prod-grid">
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><path d="M25 80V50a12 12 0 0 1 12-12h26a12 12 0 0 1 12 12v30"/><path d="M25 64h50"/><path d="M25 64c-6 0-8 10-2 12h4"/><path d="M75 64c6 0 8 10 2 12h-4"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Ruang tamu</div>
+          <h3>Kursi Boucle</h3>
+          <div class="price-row">
+            <span class="price">Rp5.200.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><path d="M38 78V45c0-8 5-13 12-13s12 5 12 13v33"/><path d="M65 78V55c0-6 4-10 9-10s9 4 9 10v23"/><path d="M30 78h48"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Dekorasi</div>
+          <h3>Set Vas Terakota</h3>
+          <div class="price-row">
+            <span class="price">Rp540.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><rect x="28" y="30" width="44" height="44" rx="8"/><path d="M28 52h44"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Tekstil</div>
+          <h3>Bantal Sofa Linen</h3>
+          <div class="price-row">
+            <span class="price">Rp350.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <span class="tag">Terlaris</span>
+          <button class="wish" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.5-8.5C.7 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4 2.4.6-1.3 2-2.4 4-2.4 3.4 0 5.3 3.5 3.5 7C19 15.6 12 20 12 20z"/></svg></button>
+          <svg viewBox="0 0 100 100"><rect x="24" y="38" width="52" height="34" rx="4"/><path d="M24 50h52"/><line x1="35" y1="38" x2="35" y2="72"/><line x1="65" y1="38" x2="65" y2="72"/></svg>
+        </div>
+        <div class="prod-info">
+          <div class="cat">Penyimpanan</div>
+          <h3>Peti Rotan Serbaguna</h3>
+          <div class="price-row">
+            <span class="price">Rp1.980.000</span>
+            <button class="add-btn">Tambah</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="values">
+  <div class="wrap">
+    <div class="value-item">
+      <div class="vi"><svg viewBox="0 0 24 24"><path d="M3 7h13v10H3z"/><path d="M16 10h3l2 3v4h-5"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg></div>
+      <div>
+        <h4>Pengiriman cepat &amp; gratis</h4>
+        <p>Gratis ongkir untuk belanja di atas Rp750.000, tiba dalam 2 hari.</p>
+      </div>
+    </div>
+    <div class="value-item">
+      <div class="vi"><svg viewBox="0 0 24 24"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/></svg></div>
+      <div>
+        <h4>Pembayaran aman</h4>
+        <p>Transaksi terenkripsi dengan berbagai metode pembayaran terpercaya.</p>
+      </div>
+    </div>
+    <div class="value-item">
+      <div class="vi"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>
+      <div>
+        <h4>Retur mudah 30 hari</h4>
+        <p>Tidak cocok di rumah? Kembalikan tanpa ribet dalam 30 hari.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter">
+  <div class="wrap">
+    <h2>Dapatkan ide menata rumah, langsung ke inbox</h2>
+    <p>Satu email tiap dua minggu berisi produk baru dan cerita di balik pengrajinnya. Tanpa spam.</p>
+    <form class="nl-form" onsubmit="return false;">
+      <input type="email" placeholder="Alamat email kamu" required>
+      <button type="submit">Berlangganan</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="logo">no<span style="color:#e0b088;">o</span>k</div>
+        <p>Perlengkapan rumah yang dipilih pelan-pelan, untuk ruang yang terasa lebih tenang dan lebih jujur pada penghuninya.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Belanja</h5>
+        <ul>
+          <li><a href="#">Baru datang</a></li>
+          <li><a href="#">Terlaris</a></li>
+          <li><a href="#">Ruang tamu</a></li>
+          <li><a href="#">Pencahayaan</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Bantuan</h5>
+        <ul>
+          <li><a href="#">Pengiriman &amp; retur</a></li>
+          <li><a href="#">Pertanyaan umum</a></li>
+          <li><a href="#">Hubungi kami</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Perusahaan</h5>
+        <ul>
+          <li><a href="#">Cerita kami</a></li>
+          <li><a href="#">Jurnal</a></li>
+          <li><a href="#">Keberlanjutan</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Ikuti kami</h5>
+        <div class="socials">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg></a>
+          <a href="#" aria-label="Pinterest"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 17c1-4 1.5-9 3-9 2.5 0 3 2 2.2 4-0.5 2-2.7 2.5-3.7 0.8"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© 2026 Nook Living. Semua hak cipta dilindungi.</p>
+      <p>Dibuat dengan bahan yang bertanggung jawab.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const burgerBtn = document.getElementById('burgerBtn');
+  const closeMenu = document.getElementById('closeMenu');
+  const mobileMenu = document.getElementById('mobileMenu');
+  burgerBtn && burgerBtn.addEventListener('click', () => mobileMenu.classList.add('open'));
+  closeMenu && closeMenu.addEventListener('click', () => mobileMenu.classList.remove('open'));
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.remove('open')));
+
+  let cartTotal = 2;
+  const cartCountEl = document.getElementById('cartCount');
+  document.querySelectorAll('.add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('added')) return;
+      btn.textContent = 'Ditambahkan';
+      btn.classList.add('added');
+      cartTotal += 1;
+      cartCountEl.textContent = cartTotal;
+      setTimeout(() => {
+        btn.textContent = 'Tambah';
+        btn.classList.remove('added');
+      }, 1600);
+    });
+  });
+</script>
+
+</body>
+</html>
