@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.models.category import Category
 from app.models.product import Product
+from app.models.order import Order, OrderItem
 from app.schemas.product import ProductCreate, ProductUpdate, ProductOut
+from app.schemas.sales import SalesSummaryOut, DailySales, CategorySales
 from app.routers.products import _format_product
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -68,3 +70,60 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     db.delete(product)
     db.commit()
     return {"message": "Produk berhasil dihapus."}
+
+@router.get("/sales-summary", response_model=SalesSummaryOut)
+def get_sales_summary(db: Session = Depends(get_db)):
+    valid_statuses = ["paid", "completed"]
+    orders = db.query(Order).filter(Order.status.in_(valid_statuses)).all()
+
+    total_revenue = sum(o.total_amount for o in orders)
+    total_orders = len(orders)
+
+    daily_map = {}
+    for o in orders:
+        date_str = o.created_at.strftime("%Y-%m-%d")
+        if date_str not in daily_map:
+            daily_map[date_str] = {"revenue": 0, "orders": 0}
+        daily_map[date_str]["revenue"] += o.total_amount
+        daily_map[date_str]["orders"] += 1
+
+    daily_sales = [
+        DailySales(date=d, revenue=vals["revenue"], orders=vals["orders"])
+        for d, vals in sorted(daily_map.items())
+    ]
+
+    category_map = {}
+    order_ids = [o.id for o in orders]
+    if order_ids:
+        items = db.query(OrderItem).filter(OrderItem.order_id.in_(order_ids)).options(
+            joinedload(OrderItem.product).joinedload(Product.category)
+        ).all()
+
+        for it in items:
+            if it.product and it.product.category:
+                cat = it.product.category
+                if cat.id not in category_map:
+                    category_map[cat.id] = {
+                        "category_name": cat.name,
+                        "revenue": 0,
+                        "quantity_sold": 0,
+                    }
+                category_map[cat.id]["revenue"] += it.price * it.quantity
+                category_map[cat.id]["quantity_sold"] += it.quantity
+
+    category_sales = [
+        CategorySales(
+            category_id=cid,
+            category_name=cdata["category_name"],
+            revenue=cdata["revenue"],
+            quantity_sold=cdata["quantity_sold"],
+        )
+        for cid, cdata in category_map.items()
+    ]
+
+    return SalesSummaryOut(
+        total_revenue=total_revenue,
+        total_orders=total_orders,
+        daily_sales=daily_sales,
+        category_sales=category_sales,
+    )
