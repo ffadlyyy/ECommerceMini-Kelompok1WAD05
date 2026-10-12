@@ -33,7 +33,7 @@ pip install -r requirements.txt
 Salin file konfigurasi environment atau buat `.env`:
 ```env
 PROJECT_NAME="E-Commerce Mini Backend"
-DATABASE_URL="postgresql://admin:R3hasa1234@localhost:5432/ecommerce_wad"
+DATABASE_URL="postgresql://admin:password@localhost:5432/ecommerce_wad"
 CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
 ```
 
