@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+venv/
+.venv/
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Environment variables
+.env
+backend/.env
+frontend/.env.local
+
+# Superpowers scratch
+.superpowers/
+
+# Node
+node_modules/
+dist/
