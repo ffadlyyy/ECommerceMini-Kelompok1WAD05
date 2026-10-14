@@ -7,8 +7,9 @@ from app.models.order import Order, OrderItem
 from app.schemas.product import ProductCreate, ProductUpdate, ProductOut
 from app.schemas.sales import SalesSummaryOut, DailySales, CategorySales
 from app.routers.products import _format_product
+from app.core.deps import require_role
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[Depends(require_role("admin"))])
 
 @router.post("/products", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
 def create_product(payload: ProductCreate, db: Session = Depends(get_db)):

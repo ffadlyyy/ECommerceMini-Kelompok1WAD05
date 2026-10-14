@@ -28,3 +28,38 @@ def client_and_db():
     client = TestClient(app)
     yield client, session
     app.dependency_overrides.clear()
+
+@pytest.fixture
+def admin_headers(client_and_db):
+    from app.core.security import create_access_token, hash_password
+    from app.models.user import User
+
+    _, session = client_and_db
+    admin = User(
+        full_name="Admin Test",
+        email="admin@test.com",
+        hashed_password=hash_password("admin12345"),
+        role="admin",
+    )
+    session.add(admin)
+    session.commit()
+    session.refresh(admin)
+    return {"Authorization": f"Bearer {create_access_token(admin.id, admin.role)}"}
+
+
+@pytest.fixture
+def customer_headers(client_and_db):
+    from app.core.security import create_access_token, hash_password
+    from app.models.user import User
+
+    _, session = client_and_db
+    user = User(
+        full_name="Customer Test",
+        email="customer@test.com",
+        hashed_password=hash_password("customer12345"),
+        role="customer",
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"Authorization": f"Bearer {create_access_token(user.id, user.role)}"}
