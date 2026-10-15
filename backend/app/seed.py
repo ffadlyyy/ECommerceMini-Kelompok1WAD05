@@ -1,7 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, Base, engine
-from app.models import Category, Product, Review, Order, OrderItem
+from app.models import Category, Product, Review, Order, OrderItem, User
+from app.core.security import hash_password
 
 CATEGORIES = [
     {"id": 1, "name": "Ruang tamu", "slug": "ruang-tamu"},
@@ -38,7 +39,25 @@ REVIEWS = [
     {"product_id": 7, "user_name": "Hendra W.", "rating": 3, "comment": "Kualitas bagus tapi harganya cukup tinggi, pengiriman agak lama."},
 ]
 
+SEED_USERS = [
+    {"full_name": "Admin Toko", "email": "admin@example.com", "password": "admin12345", "role": "admin"},
+    {"full_name": "Customer Demo", "email": "customer@example.com", "password": "customer12345", "role": "customer"},
+]
+
+def seed_users(db: Session):
+    for u in SEED_USERS:
+        existing = db.query(User).filter(User.email == u["email"]).first()
+        if not existing:
+            db.add(User(
+                full_name=u["full_name"],
+                email=u["email"],
+                hashed_password=hash_password(u["password"]),
+                role=u["role"],
+            ))
+    db.commit()
+
 def seed_data(db: Session):
+    seed_users(db)
     for c in CATEGORIES:
         existing = db.query(Category).filter(Category.id == c["id"]).first()
         if not existing:
