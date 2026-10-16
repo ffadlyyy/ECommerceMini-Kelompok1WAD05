@@ -30,12 +30,22 @@ pip install -r requirements.txt
 ```
 
 ### 3. Konfigurasi Environment & Database
-Salin file konfigurasi environment atau buat `.env`:
+```bash
+cp .env.example .env
+```
+Isi `.env`:
 ```env
 PROJECT_NAME="E-Commerce Mini Backend"
-DATABASE_URL="postgresql://admin:password@localhost:5432/ecommerce_wad"
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/ecommerce_wad"
 CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
+SECRET_KEY="idabfasudfna8ef9a" (key example)
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
+`SECRET_KEY`:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+`.env`
 
 Pastikan database PostgreSQL sudah dibuat:
 ```sql
@@ -47,6 +57,11 @@ Jalankan script seeding untuk mengisi database dengan mock data frontend (6 kate
 ```bash
 PYTHONPATH=. python -m app.seed
 ```
+Seed membuat dua akun demo (only development):
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@example.com` | `admin12345` |
+| Customer | `customer@example.com` | `customer12345` |
 
 ### 5. Menjalankan Server Development
 ```bash
@@ -69,11 +84,48 @@ Dokumentasi interaktif OpenAPI / Swagger UI tersedia di `http://localhost:8000/d
 - `GET /products/{id}` - Detail produk beserta kalkulasi rating
 - `GET /products/{id}/reviews` - Daftar review untuk produk tertentu
 
+### Auth API
+- `POST /auth/register` - Daftar akun baru. Body: `full_name`, `email`, `password` (8-72 karakter). Role selalu `customer`. Respons `201`; `409` jika email sudah terdaftar; `422` jika data tidak valid.
+- `POST /auth/login` - Body: `email`, `password`. Mengembalikan `access_token` (JWT, berlaku sesuai `ACCESS_TOKEN_EXPIRE_MINUTES`). `401` jika email atau password salah.
+- `GET /auth/me` - Data akun yang sedang login (butuh token).
+
+Kirim token di setiap request yang dilindungi:
+```
+Authorization: Bearer <access_token>
+```
+Di Swagger UI (`/docs`), klik **Authorize** lalu tempel token (tanpa kata `Bearer`).
+
+Kode status: `401` = belum login atau token tidak valid/kedaluwarsa, `403` = sudah login tetapi role tidak punya akses.
+
 ### Admin API
 - `POST /admin/products` - Tambah produk baru
 - `PUT /admin/products/{id}` - Update data produk
 - `DELETE /admin/products/{id}` - Hapus produk
 - `GET /admin/sales-summary` - Visualisasi / summary chart penjualan (total pendapatan, total order, daily sales breakdown, dan category sales breakdown)
+Seluruh endpoint `/admin/...` hanya bisa diakses dengan token milik user ber-role `admin`.
+
+## Memproteksi Route (untuk anggota tim)
+```python
+from fastapi import Depends
+from app.core.deps import get_current_user, require_role
+from app.models.user import User
+
+# Hanya perlu login (customer atau admin)
+@router.get("/orders/me")
+def my_orders(user: User = Depends(get_current_user)):
+    ...
+
+# Hanya admin
+@router.get("/admin/contoh", dependencies=[Depends(require_role("admin"))])
+def contoh():
+    ...
+```
+Di test, pakai fixture `admin_headers` atau `customer_headers` (ada di `tests/conftest.py`):
+```python
+def test_contoh(client_and_db, admin_headers):
+    client, _ = client_and_db
+    res = client.get("/admin/sales-summary", headers=admin_headers)
+```
 
 ## Menjalankan Unit Tests (TDD)
 ```bash
