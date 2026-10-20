@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.routers import categories, products, admin, auth
+from app.routers import categories, products, admin, auth, cart
 
 try:
     Base.metadata.create_all(bind=engine)
@@ -24,6 +24,7 @@ app.include_router(categories.router)
 app.include_router(products.router)
 app.include_router(admin.router)
 app.include_router(auth.router)
+app.include_router(cart.router)
 
 @app.get("/health")
 def health_check():
