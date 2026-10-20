@@ -76,10 +76,12 @@ def seed_data(db: Session):
         db.commit()
 
     if db.query(Order).count() == 0:
+        customer = db.query(User).filter(User.email == "customer@example.com").first()
+        cid = customer.id if customer else None
         now = datetime.now(timezone.utc)
-        o1 = Order(total_amount=620000, status="paid", created_at=now - timedelta(days=2))
-        o2 = Order(total_amount=4140000, status="paid", created_at=now - timedelta(days=1))
-        o3 = Order(total_amount=290000, status="completed", created_at=now)
+        o1 = Order(user_id=cid, total_amount=620000, status="paid", payment_status="paid", created_at=now - timedelta(days=2))
+        o2 = Order(user_id=cid, total_amount=4140000, status="paid", payment_status="paid", created_at=now - timedelta(days=1))
+        o3 = Order(user_id=cid, total_amount=290000, status="completed", payment_status="paid", created_at=now)
         db.add_all([o1, o2, o3])
         db.commit()
 
