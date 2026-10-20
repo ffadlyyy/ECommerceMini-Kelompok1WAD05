@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -10,6 +10,13 @@ class Order(Base):
     total_amount = Column(Integer, nullable=False, default=0)
     status = Column(String(50), nullable=False, default="pending")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    payment_status = Column(String(20), nullable=False, default="unpaid")
+    shipping_name = Column(String(100), nullable=True)
+    shipping_phone = Column(String(30), nullable=True)
+    shipping_address = Column(Text, nullable=True)
+    shipping_city = Column(String(100), nullable=True)
+    shipping_postal_code = Column(String(10), nullable=True)
 
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
