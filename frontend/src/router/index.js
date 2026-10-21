@@ -2,11 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { USE_MOCK } from '@/services/productService'
 
-// Halaman bertanda `owner` masih placeholder milik anggota lain.
-// Saat sudah jadi, cukup ganti `component` — nama route (`name`) jangan diubah
-// karena dipakai oleh navbar dan tombol di halaman lain.
-const placeholder = () => import('@/views/PlaceholderView.vue')
-
+// Nama route (`name`) jangan diubah karena dipakai oleh navbar dan tombol di halaman lain.
 export const routes = [
   { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { title: 'Beranda' } },
   { path: '/products', name: 'catalog', component: () => import('@/views/CatalogView.vue'), meta: { title: 'Katalog' } },
@@ -26,9 +22,21 @@ export const routes = [
     meta: { title: 'Daftar', guestOnly: true },
   },
 
-  // --- placeholder anggota lain ---
-  { path: '/cart', name: 'cart', component: placeholder, meta: { title: 'Keranjang', owner: 'Arico (Task 4)' } },
-  { path: '/checkout', name: 'checkout', component: placeholder, meta: { title: 'Checkout', owner: 'Arico (Task 4)' } },
+  // --- Task 4: keranjang, checkout, simulasi pembayaran ---
+  // Keranjang boleh dibuka tamu (disimpan lokal); checkout & bayar butuh login.
+  { path: '/cart', name: 'cart', component: () => import('@/views/CartView.vue'), meta: { title: 'Keranjang' } },
+  {
+    path: '/checkout',
+    name: 'checkout',
+    component: () => import('@/views/CheckoutView.vue'),
+    meta: { title: 'Checkout', requiresAuth: true },
+  },
+  {
+    path: '/orders/:id(\\d+)/payment',
+    name: 'order-payment',
+    component: () => import('@/views/PaymentView.vue'),
+    meta: { title: 'Pembayaran', requiresAuth: true },
+  },
 
   // --- Task 5: riwayat pesanan & dashboard admin ---
   {

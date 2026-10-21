@@ -6,6 +6,7 @@ import ErrorMessage from '@/components/ui/ErrorMessage.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import OrderDetail from '@/components/order/OrderDetail.vue'
 import OrderStatusBadge from '@/components/order/OrderStatusBadge.vue'
+import { USE_MOCK } from '@/services/productService'
 import { useOrderStore } from '@/stores/order'
 import { formatDateTime, formatRupiah } from '@/utils/format'
 import { ORDER_STATUSES } from '@/utils/orderStatus'
@@ -78,9 +79,13 @@ const itemSummary = (order) => {
             <p class="order__total">{{ formatRupiah(o.total_amount) }}</p>
           </div>
 
-          <p v-if="o.status === 'pending'" class="order__note">
-            {{ o.payment_status === 'failed' ? 'Pembayaran sebelumnya gagal. Silakan coba bayar lagi.' : 'Pesanan menunggu pembayaran.' }}
-          </p>
+          <div v-if="o.status === 'pending'" class="order__pending">
+            <p class="order__note">
+              {{ o.payment_status === 'failed' ? 'Pembayaran sebelumnya gagal. Silakan coba bayar lagi.' : 'Pesanan menunggu pembayaran.' }}
+            </p>
+            <!-- Data mock tidak ada di backend, jadi tombol bayar hanya untuk pesanan asli -->
+            <BaseButton v-if="!USE_MOCK" size="sm" :to="{ name: 'order-payment', params: { id: o.id } }">Bayar sekarang</BaseButton>
+          </div>
 
           <button
             type="button"
@@ -129,6 +134,7 @@ const itemSummary = (order) => {
 .order__summary { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
 .order__items { color: var(--color-ink-soft); font-size: 14px; min-width: 0; }
 .order__total { font-weight: 600; font-size: 16px; white-space: nowrap; }
+.order__pending { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .order__note { font-size: 13px; color: var(--color-accent); }
 .order__toggle { align-self: flex-start; font-size: 13.5px; text-decoration: underline; text-underline-offset: 3px; }
 .order__detail { padding-top: var(--space-3); border-top: 1px solid var(--color-line); }
