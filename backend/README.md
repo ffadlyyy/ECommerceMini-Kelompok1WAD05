@@ -97,6 +97,22 @@ Di Swagger UI (`/docs`), klik **Authorize** lalu tempel token (tanpa kata `Beare
 
 Kode status: `401` = belum login atau token tidak valid/kedaluwarsa, `403` = sudah login tetapi role tidak punya akses.
 
+### Cart API (wajib login)
+- `GET /cart` - Isi keranjang milik user, beserta `subtotal` dan `total_items`.
+- `POST /cart/items` - Tambah produk. Body: `product_id`, `quantity` (1-99). Produk yang sama akan menambah kuantitas. `400` jika melebihi stok, `404` jika produk tidak ada.
+- `PATCH /cart/items/{item_id}` - Ubah kuantitas. Body: `quantity`. `{item_id}` adalah `id` item keranjang, bukan `product_id`.
+- `DELETE /cart/items/{item_id}` - Hapus item dari keranjang.
+
+Harga selalu diambil dari database, tidak pernah dari klien.
+
+### Order API (wajib login)
+- `POST /orders/checkout` - Buat order dari isi keranjang. Body: `shipping_name`, `shipping_phone`, `shipping_address`, `shipping_city`, `shipping_postal_code` (5 digit). Total dihitung server, stok dicek dan dikurangi, keranjang dikosongkan. Order baru berstatus `pending` / `unpaid`. `400` jika keranjang kosong atau stok tidak cukup.
+- `GET /orders` - Riwayat order milik user (terbaru dulu).
+- `GET /orders/{id}` - Detail order. Order milik user lain mengembalikan `404`.
+- `POST /orders/{id}/pay` - Simulasi pembayaran. Tanpa body atau `{"result": "success"}` mengubah `payment_status` dan `status` menjadi `paid`; `{"result": "failed"}` menandai `failed` dan boleh dicoba lagi. `409` jika order sudah dibayar.
+
+Hanya order berstatus `paid` atau `completed` yang dihitung di `/admin/sales-summary`.
+
 ### Admin API
 - `POST /admin/products` - Tambah produk baru
 - `PUT /admin/products/{id}` - Update data produk
