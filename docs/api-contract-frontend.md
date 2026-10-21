@@ -89,6 +89,32 @@ Frontend membaca `detail` ala FastAPI:
 - Ganti isi `frontend/src/stores/cart.js` (sekarang stub localStorage), tapi pertahankan `totalItems` dan `addItem(product, quantity)`.
 - Komponen siap pakai: `QuantityStepper`, `PriceTag`, `ProductImage`, `EmptyState`.
 
+## Pesanan (Task 5)
+
+`GET /orders` (customer, JWT) → `200` daftar pesanan milik user, terbaru dulu:
+```json
+[{
+  "id": 8, "status": "paid", "payment_status": "paid", "total_amount": 1360000,
+  "created_at": "2026-10-11T07:55:00Z",
+  "shipping_name": "…", "shipping_phone": "…", "shipping_address": "…", "shipping_city": "…", "shipping_postal_code": "16111",
+  "items": [{ "id": 1, "product_id": 5, "name": "Keranjang Anyaman Pasar", "quantity": 2, "price": 410000, "line_total": 820000 }]
+}]
+```
+
+`GET /admin/orders?status=` (admin) → bentuk sama + `customer_name`, `customer_email`.
+
+`PATCH /admin/orders/{id}/status` (admin) body `{ "status": "shipped" }` → `200` order terbaru · `409` bila melompati alur.
+
+| `status` | Label UI |
+|---|---|
+| `pending` | Menunggu pembayaran |
+| `paid` | Dibayar |
+| `shipped` | Dikirim |
+| `completed` | Selesai |
+| `cancelled` | Dibatalkan |
+
+`payment_status`: `unpaid`, `paid`, `failed`, `refunded`.
+
 ## Untuk Siwi (Admin & Riwayat)
 
 - Layout `AdminLayout.vue` sudah ada; route `/admin` memakainya lewat `meta.layout: 'admin'`.

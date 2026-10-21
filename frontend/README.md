@@ -29,6 +29,24 @@ Kontrak data ada di [`../docs/api-contract-frontend.md`](../docs/api-contract-fr
 
 Filter katalog disimpan di URL: `/products?q=lampu&category=pencahayaan&sort=price_asc&page=2`.
 
+## Cakupan Task 5 (Admin Dashboard & Riwayat Pesanan)
+
+| Tugas | Lokasi |
+|---|---|
+| Ringkasan admin: angka penjualan, grafik pendapatan harian, pendapatan per kategori | `views/admin/AdminDashboardView.vue`, `components/admin/SalesChart.vue`, `CategorySalesBars.vue`, `StatTile.vue` |
+| Tabel CRUD produk (tambah, ubah, hapus, cari, halaman) | `views/admin/AdminProductsView.vue`, `components/admin/ProductFormModal.vue` |
+| Manajemen status pesanan | `views/admin/AdminOrdersView.vue` |
+| Riwayat pesanan customer | `views/OrdersView.vue` |
+| Data & API | `stores/admin.js`, `stores/order.js`, `services/adminService.js`, `services/orderService.js` (+ versi mock) |
+| Label & alur status | `utils/orderStatus.js` (harus sama dengan `STATUS_TRANSITIONS` di `backend/app/routers/admin.py`) |
+
+Route: `/orders` (butuh login), `/admin`, `/admin/products`, `/admin/orders` (butuh admin).
+Guard di `router/index.js` hanya untuk UX; keamanan tetap di backend (401/403). Di mode mock
+(`VITE_USE_MOCK=true`) guard dilewati supaya halaman bisa didemokan tanpa login.
+
+Alur status pesanan: `pending` → `paid` → `shipped` → `completed`; `pending`/`paid` bisa `cancelled`
+(stok dikembalikan). Grafik bisa dibaca lewat hover/fokus keyboard dan tombol **Lihat sebagai tabel**.
+
 ## Komponen bersama (boleh dipakai semua anggota)
 
 | Komponen | Fungsi |
@@ -55,8 +73,8 @@ Filter katalog disimpan di URL: `/products?q=lampu&category=pencahayaan&sort=pri
 |---|---|---|
 | `stores/auth.js` | Fadly (Task 2) | stub — pertahankan `isAuthenticated`, `isAdmin`, `user` |
 | `stores/cart.js` | Arico (Task 4) | stub localStorage — pertahankan `totalItems`, `addItem(product, qty)` |
-| `router/index.js` | bersama | route `login`, `register`, `cart`, `checkout`, `orders`, `admin` masih placeholder; ganti `component`-nya, jangan ubah `name` |
-| `layouts/AdminLayout.vue` | Siwi (Task 5) | kerangka siap diisi menu |
+| `router/index.js` | bersama | route `login`, `register`, `cart`, `checkout` masih placeholder; ganti `component`-nya, jangan ubah `name` |
+| `layouts/AdminLayout.vue` | Task 5 | menu Ringkasan, Produk, Pesanan |
 
 ## Struktur
 
@@ -66,11 +84,14 @@ src/
 ├── components/
 │   ├── ui/          komponen dasar reusable
 │   ├── layout/      AppHeader, AppFooter
-│   └── product/     komponen khusus produk
+│   ├── product/     komponen khusus produk
+│   ├── admin/       grafik, stat tile, form produk
+│   └── order/       badge status, rincian pesanan
 ├── layouts/         MainLayout, AdminLayout
-├── views/           Home, Catalog, ProductDetail, Placeholder, NotFound
-├── stores/          product (milik Ridho), auth & cart (stub)
-├── services/        api.js, productService.js, mockProductService.js
+├── views/           Home, Catalog, ProductDetail, Orders, Placeholder, NotFound
+│   └── admin/       AdminDashboard, AdminProducts, AdminOrders
+├── stores/          product (milik Ridho), admin & order (Task 5), auth & cart (stub)
+├── services/        api.js, product/order/adminService.js + versi mock
 ├── mocks/           data contoh
 ├── router/
 ├── utils/           format, debounce
