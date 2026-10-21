@@ -42,6 +42,20 @@ Login dan daftar **selalu memakai API asli**, juga saat `VITE_USE_MOCK=true`, ja
 Setelah login, `?redirect=` membawa user kembali ke halaman asal (hanya path internal, lihat `utils/redirect.js`).
 Akun demo dari seed backend: `admin@example.com` / `admin12345` dan `customer@example.com` / `customer12345`.
 
+## Cakupan Task 4 (Keranjang, Checkout, Pembayaran)
+
+| Tugas | Lokasi |
+|---|---|
+| Keranjang (ubah jumlah, hapus, subtotal, peringatan stok) | `views/CartView.vue`, `stores/cart.js` |
+| Checkout (form alamat + ringkasan, total dihitung server) | `views/CheckoutView.vue` |
+| Simulasi pembayaran (berhasil / gagal lalu coba lagi) | `views/PaymentView.vue` (`/orders/:id/payment`) |
+| API | `services/cartService.js` (`/cart`, `/orders/checkout`, `/orders/{id}/pay`) |
+
+- **Tamu** tetap bisa menambah barang; keranjangnya disimpan di `localStorage`. Saat login, isinya
+  dipindahkan ke keranjang server (barang yang stoknya tidak cukup dilewati dan diberi tahu).
+- **Sudah login**: semua lewat API `/cart`. Keranjang, checkout, dan pembayaran selalu memakai API asli.
+- Pesanan `pending` di riwayat punya tombol **Bayar sekarang** (tidak muncul untuk data mock).
+
 ## Cakupan Task 5 (Admin Dashboard & Riwayat Pesanan)
 
 | Tugas | Lokasi |
@@ -85,8 +99,8 @@ Alur status pesanan: `pending` → `paid` → `shipped` → `completed`; `pendin
 | File | Pemilik | Status |
 |---|---|---|
 | `stores/auth.js` | Task 2 | memakai API asli — tetap sediakan `isAuthenticated`, `isAdmin`, `user.name` |
-| `stores/cart.js` | Arico (Task 4) | stub localStorage — pertahankan `totalItems`, `addItem(product, qty)` |
-| `router/index.js` | bersama | route `cart`, `checkout` masih placeholder; ganti `component`-nya, jangan ubah `name` |
+| `stores/cart.js` | Task 4 | API `/cart` (login) atau localStorage (tamu) — `addItem(product, qty)` sekarang async dan melempar error stok |
+| `router/index.js` | bersama | jangan ubah `name` route karena dipakai navbar dan tombol |
 | `layouts/AdminLayout.vue` | Task 5 | menu Ringkasan, Produk, Pesanan |
 
 ## Struktur
@@ -102,10 +116,10 @@ src/
 │   ├── admin/       grafik, stat tile, form produk
 │   └── order/       badge status, rincian pesanan
 ├── layouts/         MainLayout, AdminLayout
-├── views/           Home, Catalog, ProductDetail, Login, Register, Orders, Placeholder, NotFound
+├── views/           Home, Catalog, ProductDetail, Login, Register, Cart, Checkout, Payment, Orders, NotFound
 │   └── admin/       AdminDashboard, AdminProducts, AdminOrders
-├── stores/          product (milik Ridho), auth (Task 2), admin & order (Task 5), cart (stub)
-├── services/        api.js, authService.js, product/order/adminService.js + versi mock
+├── stores/          product (milik Ridho), auth (Task 2), cart (Task 4), admin & order (Task 5)
+├── services/        api.js, authService.js, cartService.js, product/order/adminService.js + versi mock
 ├── mocks/           data contoh
 ├── router/
 ├── utils/           format, debounce

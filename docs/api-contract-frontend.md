@@ -91,10 +91,20 @@ Frontend membaca `detail` ala FastAPI:
 - Respons `401` pada request yang membawa token membuat frontend menghapus sesi.
 - `stores/auth.js` menyediakan `isAuthenticated`, `isAdmin`, `user.name` (= `full_name`), `login()`, `register()`, `logout()`, `fetchMe()`.
 
-## Untuk Arico (Cart)
+## Keranjang & checkout (Task 4)
 
-- Ganti isi `frontend/src/stores/cart.js` (sekarang stub localStorage), tapi pertahankan `totalItems` dan `addItem(product, quantity)`.
-- Komponen siap pakai: `QuantityStepper`, `PriceTag`, `ProductImage`, `EmptyState`.
+Semua butuh JWT. Respons keranjang (`GET /cart`, dan juga hasil `POST`/`PATCH`/`DELETE /cart/items...`):
+```json
+{
+  "items": [{ "id": 11, "product_id": 1, "name": "Lampu Meja Linen", "price": 620000, "image_url": null, "stock": 14, "quantity": 2, "line_total": 1240000 }],
+  "total_items": 2,
+  "subtotal": 1240000
+}
+```
+- `POST /cart/items` `{ product_id, quantity }` · `PATCH /cart/items/{id}` `{ quantity }` · `DELETE /cart/items/{id}` — `{id}` = id item keranjang. `400` bila stok tidak cukup.
+- `POST /orders/checkout` `{ shipping_name, shipping_phone, shipping_address, shipping_city, shipping_postal_code }` → `201` order (`pending` / `unpaid`), keranjang dikosongkan.
+- `POST /orders/{id}/pay` `{ "result": "success" | "failed" }` → order. `409` bila sudah dibayar.
+- `stores/cart.js` menyediakan `items`, `totalItems`, `subtotal`, `addItem(product, qty)` (async), `updateQuantity`, `removeItem`, `fetchCart`, `clear`.
 
 ## Pesanan (Task 5)
 
