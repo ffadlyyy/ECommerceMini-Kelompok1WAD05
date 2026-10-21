@@ -49,11 +49,19 @@ watch(product, (p) => {
   document.title = p ? `${p.name} — Nook` : 'Detail Produk — Nook'
 })
 
-function addToCart() {
-  cart.addItem(product.value, quantity.value)
-  added.value = true
-  clearTimeout(timer)
-  timer = setTimeout(() => (added.value = false), 2500)
+const cartError = ref('')
+
+async function addToCart() {
+  cartError.value = ''
+  try {
+    await cart.addItem(product.value, quantity.value)
+    added.value = true
+    clearTimeout(timer)
+    timer = setTimeout(() => (added.value = false), 2500)
+  } catch (e) {
+    added.value = false
+    cartError.value = e.message || 'Gagal menambahkan ke keranjang.'
+  }
 }
 onBeforeUnmount(() => clearTimeout(timer))
 
@@ -122,6 +130,7 @@ async function submitReview(payload, done) {
             Ditambahkan ke keranjang.
             <RouterLink :to="{ name: 'cart' }">Lihat keranjang</RouterLink>
           </p>
+          <p v-if="cartError" class="detail__cart-error" role="alert">{{ cartError }}</p>
         </div>
       </div>
 
@@ -162,6 +171,7 @@ a.detail__rating:hover { text-decoration: underline; text-underline-offset: 3px;
 .detail__desc { color: var(--color-ink-soft); line-height: 1.7; max-width: 52ch; }
 .detail__buy { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-top: var(--space-2); }
 .detail__added { font-size: 14px; color: var(--color-success); }
+.detail__cart-error { font-size: 14px; color: var(--color-danger); }
 .detail__added a { text-decoration: underline; text-underline-offset: 3px; font-weight: 500; }
 
 .reviews { margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-line); scroll-margin-top: calc(var(--header-h) + 16px); }

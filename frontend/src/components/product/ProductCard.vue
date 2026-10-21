@@ -14,13 +14,19 @@ const props = defineProps({
 
 const cart = useCartStore()
 const added = ref(false)
+const error = ref('')
 let timer = null
 
-function add() {
-  cart.addItem(props.product, 1)
-  added.value = true
-  clearTimeout(timer)
-  timer = setTimeout(() => (added.value = false), 1600)
+async function add() {
+  error.value = ''
+  try {
+    await cart.addItem(props.product, 1)
+    added.value = true
+    clearTimeout(timer)
+    timer = setTimeout(() => (added.value = false), 1600)
+  } catch (e) {
+    error.value = e.message || 'Gagal menambahkan ke keranjang.'
+  }
 }
 onBeforeUnmount(() => clearTimeout(timer))
 </script>
@@ -54,6 +60,7 @@ onBeforeUnmount(() => clearTimeout(timer))
           {{ product.stock === 0 ? 'Habis' : added ? 'Ditambahkan' : 'Tambah' }}
         </BaseButton>
       </div>
+      <p v-if="error" class="card__error" role="alert">{{ error }}</p>
     </div>
   </article>
 </template>
@@ -75,5 +82,6 @@ onBeforeUnmount(() => clearTimeout(timer))
 .card__name { font-family: var(--font-body); font-weight: 600; font-size: 15.5px; margin-bottom: 8px; }
 .card__name a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .card__rating { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; color: var(--color-ink-soft); }
+.card__error { margin-top: var(--space-2); font-size: 12.5px; color: var(--color-danger); }
 .card__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: auto; padding-top: var(--space-2); }
 </style>
