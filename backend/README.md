@@ -111,13 +111,23 @@ Harga selalu diambil dari database, tidak pernah dari klien.
 - `GET /orders/{id}` - Detail order. Order milik user lain mengembalikan `404`.
 - `POST /orders/{id}/pay` - Simulasi pembayaran. Tanpa body atau `{"result": "success"}` mengubah `payment_status` dan `status` menjadi `paid`; `{"result": "failed"}` menandai `failed` dan boleh dicoba lagi. `409` jika order sudah dibayar.
 
-Hanya order berstatus `paid` atau `completed` yang dihitung di `/admin/sales-summary`.
+Hanya order berstatus `paid`, `shipped`, atau `completed` yang dihitung di `/admin/sales-summary`.
 
 ### Admin API
 - `POST /admin/products` - Tambah produk baru
 - `PUT /admin/products/{id}` - Update data produk
-- `DELETE /admin/products/{id}` - Hapus produk
+- `DELETE /admin/products/{id}` - Hapus produk. `409` jika produk sudah pernah dipesan (riwayat order dijaga); ubah stok menjadi 0 sebagai gantinya.
 - `GET /admin/sales-summary` - Visualisasi / summary chart penjualan (total pendapatan, total order, daily sales breakdown, dan category sales breakdown)
+- `GET /admin/orders?status=` - Semua order (terbaru dulu) beserta `customer_name` dan `customer_email`. `status` opsional untuk filter.
+- `PATCH /admin/orders/{id}/status` - Ubah status order. Body: `{"status": "shipped"}`. Alur yang diizinkan:
+
+  | Dari | Ke |
+  |---|---|
+  | `pending` | `paid` (sekaligus `payment_status = paid`), `cancelled` |
+  | `paid` | `shipped`, `cancelled` |
+  | `shipped` | `completed` |
+
+  `completed` dan `cancelled` adalah status akhir. Membatalkan order mengembalikan stok, dan order yang sudah dibayar ditandai `payment_status = refunded`. `409` jika perubahan tidak sesuai alur, `404` jika order tidak ada.
 Seluruh endpoint `/admin/...` hanya bisa diakses dengan token milik user ber-role `admin`.
 
 ## Memproteksi Route (untuk anggota tim)

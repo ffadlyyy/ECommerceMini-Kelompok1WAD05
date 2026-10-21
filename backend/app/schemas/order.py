@@ -37,3 +37,15 @@ class OrderOut(BaseModel):
 
 class PayRequest(BaseModel):
     result: Literal["success", "failed"] = "success"
+
+
+OrderStatus = Literal["pending", "paid", "shipped", "completed", "cancelled"]
+
+
+class AdminOrderOut(OrderOut):
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
+
+
+class OrderStatusUpdate(BaseModel):
+    status: OrderStatus

@@ -1,13 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.models.category import Category
 from app.models.product import Product
 from app.models.order import Order, OrderItem
+from app.models.user import User
 from app.schemas.product import ProductCreate, ProductUpdate, ProductOut
 from app.schemas.sales import SalesSummaryOut, DailySales, CategorySales
+from app.schemas.order import AdminOrderOut, OrderStatus, OrderStatusUpdate
 from app.routers.products import _format_product
+from app.routers.orders import _format_order
 from app.core.deps import require_role
+
+# Order yang dihitung sebagai penjualan (sudah dibayar dan tidak dibatalkan).
+SALES_STATUSES = ["paid", "shipped", "completed"]
+
+# Alur status yang boleh diubah admin. `completed` dan `cancelled` adalah status akhir.
+STATUS_TRANSITIONS = {
+    "pending": {"paid", "cancelled"},
+    "paid": {"shipped", "cancelled"},
+    "shipped": {"completed"},
+}
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[Depends(require_role("admin"))])
 
@@ -68,14 +82,20 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     if not product:
         raise HTTPException(status_code=404, detail="Produk tidak ditemukan.")
 
+    # order_items.product_id memakai ON DELETE RESTRICT, jadi riwayat order harus tetap utuh.
+    if db.query(OrderItem).filter(OrderItem.product_id == product_id).first():
+        raise HTTPException(
+            status_code=409,
+            detail="Produk sudah pernah dipesan dan tidak bisa dihapus. Ubah stok menjadi 0 untuk menonaktifkannya.",
+        )
+
     db.delete(product)
     db.commit()
     return {"message": "Produk berhasil dihapus."}
 
 @router.get("/sales-summary", response_model=SalesSummaryOut)
 def get_sales_summary(db: Session = Depends(get_db)):
-    valid_statuses = ["paid", "completed"]
-    orders = db.query(Order).filter(Order.status.in_(valid_statuses)).all()
+    orders = db.query(Order).filter(Order.status.in_(SALES_STATUSES)).all()
 
     total_revenue = sum(o.total_amount for o in orders)
     total_orders = len(orders)
@@ -128,3 +148,51 @@ def get_sales_summary(db: Session = Depends(get_db)):
         daily_sales=daily_sales,
         category_sales=category_sales,
     )
+
+def _format_admin_order(order: Order, user: Optional[User]) -> AdminOrderOut:
+    return AdminOrderOut(
+        **_format_order(order).model_dump(),
+        customer_name=user.full_name if user else None,
+        customer_email=user.email if user else None,
+    )
+
+@router.get("/orders", response_model=list[AdminOrderOut])
+def list_orders(status: Optional[OrderStatus] = Query(None), db: Session = Depends(get_db)):
+    query = (
+        db.query(Order, User)
+        .outerjoin(User, User.id == Order.user_id)
+        .options(joinedload(Order.items).joinedload(OrderItem.product))
+    )
+    if status:
+        query = query.filter(Order.status == status)
+    rows = query.order_by(Order.created_at.desc(), Order.id.desc()).all()
+    return [_format_admin_order(order, user) for order, user in rows]
+
+@router.patch("/orders/{order_id}/status", response_model=AdminOrderOut)
+def update_order_status(order_id: int, payload: OrderStatusUpdate, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).with_for_update().first()
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order tidak ditemukan.")
+
+    new_status = payload.status
+    if new_status not in STATUS_TRANSITIONS.get(order.status, set()):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Status '{order.status}' tidak bisa diubah menjadi '{new_status}'.",
+        )
+
+    if new_status == "paid":
+        order.payment_status = "paid"
+    elif new_status == "cancelled":
+        # Kembalikan stok yang dikurangi saat checkout.
+        for it in order.items:
+            if it.product:
+                it.product.stock += it.quantity
+        if order.payment_status == "paid":
+            order.payment_status = "refunded"
+
+    order.status = new_status
+    db.commit()
+    db.refresh(order)
+    user = db.query(User).filter(User.id == order.user_id).first() if order.user_id else None
+    return _format_admin_order(order, user)
