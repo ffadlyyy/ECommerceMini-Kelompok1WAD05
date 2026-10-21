@@ -41,6 +41,7 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
 
       <nav class="header__nav" aria-label="Navigasi utama">
         <RouterLink v-for="l in links" :key="l.label" :to="l.to" class="header__link">{{ l.label }}</RouterLink>
+        <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin' }" class="header__link">Admin</RouterLink>
       </nav>
 
       <div class="header__actions">
@@ -71,6 +72,8 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
       </div>
       <SearchBar class="mobile__search" label="Cari produk" @search="onSearch" />
       <RouterLink v-for="l in links" :key="l.label" :to="l.to" class="mobile__link">{{ l.label }}</RouterLink>
+      <RouterLink v-if="auth.isAuthenticated" :to="{ name: 'orders' }" class="mobile__link">Pesanan saya</RouterLink>
+      <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin' }" class="mobile__link">Admin</RouterLink>
     </div>
   </header>
 </template>

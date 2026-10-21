@@ -1,12 +1,11 @@
 <script setup>
-// Kerangka dashboard admin untuk Task 5 (Siwi). Isi menu `links` sesuai route admin
-// yang dibuat nanti; konten halaman masuk lewat <slot />.
+// Kerangka dashboard admin (Task 5). Konten halaman masuk lewat <slot />.
 import { RouterLink } from 'vue-router'
 
 const links = [
   { label: 'Ringkasan', to: { name: 'admin' } },
-  // { label: 'Produk', to: { name: 'admin-products' } },
-  // { label: 'Pesanan', to: { name: 'admin-orders' } },
+  { label: 'Produk', to: { name: 'admin-products' } },
+  { label: 'Pesanan', to: { name: 'admin-orders' } },
 ]
 </script>
 
