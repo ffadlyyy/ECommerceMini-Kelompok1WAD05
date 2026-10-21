@@ -184,10 +184,16 @@ def update_order_status(order_id: int, payload: OrderStatusUpdate, db: Session =
     if new_status == "paid":
         order.payment_status = "paid"
     elif new_status == "cancelled":
-        # Kembalikan stok yang dikurangi saat checkout.
+        # Kembalikan stok yang dikurangi saat checkout. Kunci baris produk (urut by id, sama
+        # seperti checkout) supaya tidak bentrok dengan checkout yang berjalan bersamaan.
+        ids = sorted({it.product_id for it in order.items})
+        products = {
+            p.id: p
+            for p in db.query(Product).filter(Product.id.in_(ids)).order_by(Product.id).with_for_update().all()
+        }
         for it in order.items:
-            if it.product:
-                it.product.stock += it.quantity
+            if it.product_id in products:
+                products[it.product_id].stock += it.quantity
         if order.payment_status == "paid":
             order.payment_status = "refunded"
 
