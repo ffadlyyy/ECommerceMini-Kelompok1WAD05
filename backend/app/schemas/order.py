@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -34,3 +34,6 @@ class OrderOut(BaseModel):
     shipping_city: Optional[str] = None
     shipping_postal_code: Optional[str] = None
     items: List[OrderItemOut]
+
+class PayRequest(BaseModel):
+    result: Literal["success", "failed"] = "success"

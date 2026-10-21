@@ -135,3 +135,72 @@ def test_cannot_view_other_users_order(client_and_db, customer_headers):
 def test_order_detail_not_found(client_and_db, customer_headers):
     client, _ = client_and_db
     assert client.get("/orders/9999", headers=customer_headers).status_code == 404
+
+def _place_order(client, db, headers, qty=2, price=100000):
+    _fill_cart(client, db, headers, qty=qty, price=price)
+    return client.post("/orders/checkout", json=ADDRESS, headers=headers).json()
+
+
+def test_pay_requires_login(client_and_db):
+    client, _ = client_and_db
+    assert client.post("/orders/1/pay").status_code == 401
+
+
+def test_pay_success(client_and_db, customer_headers):
+    client, db = client_and_db
+    order = _place_order(client, db, customer_headers)
+    res = client.post(f"/orders/{order['id']}/pay", headers=customer_headers)
+    assert res.status_code == 200
+    assert res.json()["payment_status"] == "paid"
+    assert res.json()["status"] == "paid"
+
+
+def test_pay_failed_then_retry(client_and_db, customer_headers):
+    client, db = client_and_db
+    order = _place_order(client, db, customer_headers)
+    url = f"/orders/{order['id']}/pay"
+    res = client.post(url, json={"result": "failed"}, headers=customer_headers)
+    assert res.json()["payment_status"] == "failed"
+    assert res.json()["status"] == "pending"
+    res = client.post(url, headers=customer_headers)
+    assert res.json()["payment_status"] == "paid"
+
+
+def test_pay_twice_rejected(client_and_db, customer_headers):
+    client, db = client_and_db
+    order = _place_order(client, db, customer_headers)
+    url = f"/orders/{order['id']}/pay"
+    assert client.post(url, headers=customer_headers).status_code == 200
+    assert client.post(url, headers=customer_headers).status_code == 409
+
+
+def test_pay_invalid_result(client_and_db, customer_headers):
+    client, db = client_and_db
+    order = _place_order(client, db, customer_headers)
+    res = client.post(f"/orders/{order['id']}/pay", json={"result": "gratis"}, headers=customer_headers)
+    assert res.status_code == 422
+
+
+def test_cannot_pay_other_users_order(client_and_db, customer_headers):
+    client, db = client_and_db
+    order = _place_order(client, db, customer_headers)
+    res = client.post(f"/orders/{order['id']}/pay", headers=_other_headers(client))
+    assert res.status_code == 404
+    still = client.get(f"/orders/{order['id']}", headers=customer_headers).json()
+    assert still["payment_status"] == "unpaid"
+
+
+def test_pay_unknown_order(client_and_db, customer_headers):
+    client, _ = client_and_db
+    assert client.post("/orders/9999/pay", headers=customer_headers).status_code == 404
+
+
+def test_paid_order_appears_in_sales_summary(client_and_db, customer_headers, admin_headers):
+    client, db = client_and_db
+    order = _place_order(client, db, customer_headers, qty=2, price=100000)
+    before = client.get("/admin/sales-summary", headers=admin_headers).json()
+    assert before["total_orders"] == 0
+    client.post(f"/orders/{order['id']}/pay", headers=customer_headers)
+    after = client.get("/admin/sales-summary", headers=admin_headers).json()
+    assert after["total_orders"] == 1
+    assert after["total_revenue"] == 200000

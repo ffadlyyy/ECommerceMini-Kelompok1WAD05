@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
@@ -7,7 +8,7 @@ from app.models.cart import Cart
 from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.user import User
-from app.schemas.order import CheckoutRequest, OrderItemOut, OrderOut
+from app.schemas.order import CheckoutRequest, OrderItemOut, OrderOut, PayRequest
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -97,4 +98,35 @@ def get_my_order(order_id: int, user: User = Depends(get_current_user), db: Sess
     order = db.query(Order).filter(Order.id == order_id, Order.user_id == user.id).first()
     if order is None:
         raise HTTPException(status_code=404, detail="Order tidak ditemukan.")
+    return _format_order(order)
+
+@router.post("/{order_id}/pay", response_model=OrderOut)
+def pay_order(
+    order_id: int,
+    payload: Optional[PayRequest] = None,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id, Order.user_id == user.id)
+        .with_for_update()
+        .first()
+    )
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order tidak ditemukan.")
+    if order.payment_status == "paid":
+        raise HTTPException(status_code=409, detail="Order sudah dibayar.")
+    if order.status != "pending":
+        raise HTTPException(status_code=409, detail="Order ini tidak bisa dibayar.")
+
+    result = payload.result if payload else "success"
+    if result == "success":
+        order.payment_status = "paid"
+        order.status = "paid"
+    else:
+        order.payment_status = "failed"
+
+    db.commit()
+    db.refresh(order)
     return _format_order(order)
