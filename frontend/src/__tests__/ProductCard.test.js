@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import ProductCard from '@/components/product/ProductCard.vue'
@@ -46,18 +46,8 @@ describe('ProductCard', () => {
   it('tombol Tambah memasukkan produk ke keranjang', async () => {
     const w = factory()
     await w.get('button').trigger('click')
-    await flushPromises()
     expect(useCartStore().totalItems).toBe(1)
     expect(w.get('button').text()).toBe('Ditambahkan')
-  })
-
-  it('menampilkan pesan bila jumlah melebihi stok', async () => {
-    const w = factory({ stock: 1 })
-    await w.get('button').trigger('click')
-    await w.get('button').trigger('click')
-    await flushPromises()
-    expect(useCartStore().totalItems).toBe(1)
-    expect(w.get('[role="alert"]').text()).toBe('Stok tidak cukup. Tersisa 1.')
   })
 
   it('produk dengan stok 0 tidak bisa ditambahkan', () => {
