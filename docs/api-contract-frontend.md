@@ -79,10 +79,17 @@ Frontend membaca `detail` ala FastAPI:
 { "detail": "Pesan yang bisa ditampilkan ke pengguna." }
 ```
 
-## Untuk Fadly (Auth)
+## Auth (Task 2)
+
+| Endpoint | Body | Respons |
+|---|---|---|
+| `POST /auth/register` | `{ full_name, email, password }` (password 8–72) | `201` user · `409` email terdaftar · `422` |
+| `POST /auth/login` | `{ email, password }` | `200 { access_token, token_type }` · `401` |
+| `GET /auth/me` | — (JWT) | `200 { id, full_name, email, role, created_at }` · `401` |
 
 - Token disimpan di `localStorage` dengan kunci `access_token` dan dikirim otomatis oleh `frontend/src/services/api.js`.
-- Ganti isi `frontend/src/stores/auth.js` (sekarang stub), tapi pertahankan: `isAuthenticated`, `isAdmin`, `user.name`.
+- Respons `401` pada request yang membawa token membuat frontend menghapus sesi.
+- `stores/auth.js` menyediakan `isAuthenticated`, `isAdmin`, `user.name` (= `full_name`), `login()`, `register()`, `logout()`, `fetchMe()`.
 
 ## Untuk Arico (Cart)
 

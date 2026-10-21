@@ -29,6 +29,19 @@ Kontrak data ada di [`../docs/api-contract-frontend.md`](../docs/api-contract-fr
 
 Filter katalog disimpan di URL: `/products?q=lampu&category=pencahayaan&sort=price_asc&page=2`.
 
+## Cakupan Task 2 (Autentikasi, frontend)
+
+| Tugas | Lokasi |
+|---|---|
+| Halaman masuk & daftar | `views/LoginView.vue`, `views/RegisterView.vue`, `components/auth/AuthCard.vue` |
+| Sesi (token JWT + data akun dari `GET /auth/me`) | `stores/auth.js`, `services/authService.js` |
+| Proteksi route (login, role admin, halaman khusus tamu) | `router/index.js` |
+| Token kedaluwarsa → sesi dibersihkan otomatis | `services/api.js` (`setUnauthorizedHandler`) |
+
+Login dan daftar **selalu memakai API asli**, juga saat `VITE_USE_MOCK=true`, jadi backend harus jalan.
+Setelah login, `?redirect=` membawa user kembali ke halaman asal (hanya path internal, lihat `utils/redirect.js`).
+Akun demo dari seed backend: `admin@example.com` / `admin12345` dan `customer@example.com` / `customer12345`.
+
 ## Cakupan Task 5 (Admin Dashboard & Riwayat Pesanan)
 
 | Tugas | Lokasi |
@@ -71,9 +84,9 @@ Alur status pesanan: `pending` → `paid` → `shipped` → `completed`; `pendin
 
 | File | Pemilik | Status |
 |---|---|---|
-| `stores/auth.js` | Fadly (Task 2) | stub — pertahankan `isAuthenticated`, `isAdmin`, `user` |
+| `stores/auth.js` | Task 2 | memakai API asli — tetap sediakan `isAuthenticated`, `isAdmin`, `user.name` |
 | `stores/cart.js` | Arico (Task 4) | stub localStorage — pertahankan `totalItems`, `addItem(product, qty)` |
-| `router/index.js` | bersama | route `login`, `register`, `cart`, `checkout` masih placeholder; ganti `component`-nya, jangan ubah `name` |
+| `router/index.js` | bersama | route `cart`, `checkout` masih placeholder; ganti `component`-nya, jangan ubah `name` |
 | `layouts/AdminLayout.vue` | Task 5 | menu Ringkasan, Produk, Pesanan |
 
 ## Struktur
@@ -85,13 +98,14 @@ src/
 │   ├── ui/          komponen dasar reusable
 │   ├── layout/      AppHeader, AppFooter
 │   ├── product/     komponen khusus produk
+│   ├── auth/        kartu form login/daftar
 │   ├── admin/       grafik, stat tile, form produk
 │   └── order/       badge status, rincian pesanan
 ├── layouts/         MainLayout, AdminLayout
-├── views/           Home, Catalog, ProductDetail, Orders, Placeholder, NotFound
+├── views/           Home, Catalog, ProductDetail, Login, Register, Orders, Placeholder, NotFound
 │   └── admin/       AdminDashboard, AdminProducts, AdminOrders
-├── stores/          product (milik Ridho), admin & order (Task 5), auth & cart (stub)
-├── services/        api.js, product/order/adminService.js + versi mock
+├── stores/          product (milik Ridho), auth (Task 2), admin & order (Task 5), cart (stub)
+├── services/        api.js, authService.js, product/order/adminService.js + versi mock
 ├── mocks/           data contoh
 ├── router/
 ├── utils/           format, debounce
