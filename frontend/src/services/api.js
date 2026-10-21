@@ -10,13 +10,6 @@ export class ApiError extends Error {
   }
 }
 
-// Dipanggil saat server menolak token yang dikirim (kedaluwarsa / tidak valid).
-// Didaftarkan oleh stores/auth.js supaya sesi dibersihkan.
-let onUnauthorized = null
-export function setUnauthorizedHandler(handler) {
-  onUnauthorized = handler
-}
-
 export function getToken() {
   try {
     return localStorage.getItem(TOKEN_KEY)
@@ -46,8 +39,6 @@ export async function request(path, { method = 'GET', params, body } = {}) {
   } catch {
     throw new ApiError('Tidak dapat terhubung ke server. Periksa koneksi Anda.')
   }
-
-  if (response.status === 401 && token) onUnauthorized?.()
 
   if (!response.ok) {
     let message = `Permintaan gagal (${response.status})`
