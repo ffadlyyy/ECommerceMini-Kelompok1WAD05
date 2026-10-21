@@ -26,6 +26,12 @@ function onSearch(value) {
   router.push({ name: 'catalog', query: q ? { q } : {} })
 }
 
+function logout() {
+  auth.logout()
+  menuOpen.value = false
+  router.push({ name: 'home' })
+}
+
 function onKey(e) {
   if (e.key === 'Escape') menuOpen.value = false
 }
@@ -47,9 +53,17 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
       <div class="header__actions">
         <SearchBar v-if="showSearch" class="header__search" label="Cari produk" @search="onSearch" />
 
-        <RouterLink :to="{ name: auth.isAuthenticated ? 'orders' : 'login' }" class="icon-btn" :aria-label="auth.isAuthenticated ? 'Akun & pesanan' : 'Masuk'">
+        <RouterLink
+          :to="{ name: auth.isAuthenticated ? 'orders' : 'login' }"
+          class="icon-btn"
+          :aria-label="auth.isAuthenticated ? `Pesanan saya${auth.user ? ` (${auth.user.name})` : ''}` : 'Masuk'"
+          :title="auth.user?.name"
+        >
           <AppIcon name="user" :size="18" />
         </RouterLink>
+        <button v-if="auth.isAuthenticated" type="button" class="icon-btn header__logout" aria-label="Keluar" title="Keluar" @click="logout">
+          <AppIcon name="logout" :size="18" />
+        </button>
 
         <RouterLink :to="{ name: 'cart' }" class="icon-btn" :aria-label="`Keranjang, ${cart.totalItems} barang`">
           <AppIcon name="bag" :size="18" />
@@ -74,6 +88,8 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
       <RouterLink v-for="l in links" :key="l.label" :to="l.to" class="mobile__link">{{ l.label }}</RouterLink>
       <RouterLink v-if="auth.isAuthenticated" :to="{ name: 'orders' }" class="mobile__link">Pesanan saya</RouterLink>
       <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin' }" class="mobile__link">Admin</RouterLink>
+      <button v-if="auth.isAuthenticated" type="button" class="mobile__link mobile__logout" @click="logout">Keluar</button>
+      <RouterLink v-else :to="{ name: 'login' }" class="mobile__link">Masuk</RouterLink>
     </div>
   </header>
 </template>
@@ -112,10 +128,12 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
 .mobile__top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); }
 .mobile__search { margin-bottom: var(--space-4); }
 .mobile__link { font-family: var(--font-display); font-size: 26px; padding: 14px 0; border-bottom: 1px solid var(--color-line); }
+.mobile__logout { text-align: left; }
 
 @media (max-width: 820px) {
   .header__nav { display: none; }
   .header__search { display: none; }
   .header__burger { display: flex; }
+  .header__logout { display: none; }
 }
 </style>

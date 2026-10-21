@@ -17,9 +17,16 @@ export const routes = [
     meta: { title: 'Detail Produk' },
   },
 
+  // --- Task 2: autentikasi ---
+  { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue'), meta: { title: 'Masuk', guestOnly: true } },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { title: 'Daftar', guestOnly: true },
+  },
+
   // --- placeholder anggota lain ---
-  { path: '/login', name: 'login', component: placeholder, meta: { title: 'Masuk', owner: 'Fadly (Task 2)' } },
-  { path: '/register', name: 'register', component: placeholder, meta: { title: 'Daftar', owner: 'Fadly (Task 2)' } },
   { path: '/cart', name: 'cart', component: placeholder, meta: { title: 'Keranjang', owner: 'Arico (Task 4)' } },
   { path: '/checkout', name: 'checkout', component: placeholder, meta: { title: 'Checkout', owner: 'Arico (Task 4)' } },
 
@@ -65,15 +72,26 @@ const router = createRouter({
 })
 
 // Guard ini hanya untuk UX; keamanan sebenarnya ada di backend (401/403).
-// Mode mock belum punya login sungguhan, jadi semua halaman dibiarkan terbuka untuk demo.
-router.beforeEach((to) => {
-  if (USE_MOCK) return true
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
+  // Token tersimpan (mis. setelah refresh) -> muat data akun sekali sebelum cek role.
+  if (auth.isAuthenticated && !auth.user) {
+    try {
+      await auth.fetchMe()
+    } catch {
+      /* 401 -> sesi sudah dibersihkan; error jaringan -> dianggap belum diketahui */
+    }
+  }
+
+  if (to.meta.guestOnly && auth.user) return { name: auth.isAdmin ? 'admin' : 'home' }
+
+  // Mode mock (data produk/pesanan palsu) dipakai untuk demo tanpa backend: halaman dibiarkan terbuka.
+  if (USE_MOCK) return true
+
   if ((to.meta.requiresAuth || to.meta.requiresAdmin) && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  // `user` bisa belum dimuat (stub auth); bila sudah dan bukan admin, kembalikan ke beranda.
-  if (to.meta.requiresAdmin && auth.user && !auth.isAdmin) return { name: 'home' }
+  if (to.meta.requiresAdmin && !auth.isAdmin) return { name: 'home' }
   return true
 })
 
