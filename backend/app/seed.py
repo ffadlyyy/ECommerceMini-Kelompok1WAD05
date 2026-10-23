@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -40,9 +41,10 @@ REVIEWS = [
     {"product_id": 7, "user_name": "Hendra W.", "rating": 3, "comment": "Kualitas bagus tapi harganya cukup tinggi, pengiriman agak lama."},
 ]
 
+# Password default hanya untuk development lokal; di server isi lewat env (lihat docker-entrypoint.sh)
 SEED_USERS = [
-    {"full_name": "Admin Toko", "email": "admin@example.com", "password": "admin12345", "role": "admin"},
-    {"full_name": "Customer Demo", "email": "customer@example.com", "password": "customer12345", "role": "customer"},
+    {"full_name": "Admin Toko", "email": "admin@example.com", "password": os.getenv("SEED_ADMIN_PASSWORD") or "admin12345", "role": "admin"},
+    {"full_name": "Customer Demo", "email": "customer@example.com", "password": os.getenv("SEED_CUSTOMER_PASSWORD") or "customer12345", "role": "customer"},
 ]
 
 def seed_users(db: Session):

@@ -22,7 +22,9 @@ services:
       SECRET_KEY: ${SECRET_KEY:?Isi SECRET_KEY di file .env}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-      RUN_SEED: ${RUN_SEED:-true}
+      RUN_SEED: ${RUN_SEED:-false}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_CUSTOMER_PASSWORD: ${SEED_CUSTOMER_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy

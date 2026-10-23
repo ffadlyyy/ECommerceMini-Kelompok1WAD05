@@ -192,7 +192,7 @@ Frontend berjalan di `http://localhost:5173`.
 Satu perintah menjalankan PostgreSQL, backend, dan frontend (Caddy). Backend tidak dibuka ke luar; Caddy mem-proxy `/api/*` ke backend, jadi tidak perlu atur CORS.
 
 ```bash
-cp .env.docker.example .env      # isi SECRET_KEY dan POSTGRES_PASSWORD
+cp .env.docker.example .env      # isi SECRET_KEY, POSTGRES_PASSWORD, SEED_ADMIN_PASSWORD, SEED_CUSTOMER_PASSWORD
 docker compose up -d --build
 ```
 
@@ -203,6 +203,8 @@ toko.domainmu.com {
 	reverse_proxy 127.0.0.1:8080
 }
 ```
+
+Dengan `RUN_SEED=true`, backend mengisi kategori, produk, serta akun `admin@example.com` dan `customer@example.com` dengan password dari `SEED_ADMIN_PASSWORD` / `SEED_CUSTOMER_PASSWORD` (backend menolak start kalau password kosong). Akun hanya dibuat sekali; setelah deploy pertama set `RUN_SEED=false`.
 
 Kalau backend dan frontend di-deploy terpisah (mis. backend di Railway, frontend di layanan lain), build frontend dengan URL publik backend dan isi `CORS_ORIGINS` di backend:
 
