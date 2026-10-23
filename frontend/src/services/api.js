@@ -30,7 +30,8 @@ export function getToken() {
  * @param {{method?: string, params?: object, body?: object}} options
  */
 export async function request(path, { method = 'GET', params, body } = {}) {
-  const url = new URL(path, BASE_URL)
+  // BASE_URL boleh absolut (http://localhost:8000) atau relatif (/api, di-proxy Caddy)
+  const url = new URL(BASE_URL.replace(/\/$/, '') + path, window.location.origin)
   for (const [key, value] of Object.entries(params ?? {})) {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, value)
   }
