@@ -187,6 +187,31 @@ npm run dev
 
 Frontend berjalan di `http://localhost:5173`.
 
+### Deploy dengan Docker
+
+Satu perintah menjalankan PostgreSQL, backend, dan frontend (Caddy). Backend tidak dibuka ke luar; Caddy mem-proxy `/api/*` ke backend, jadi tidak perlu atur CORS.
+
+```bash
+cp .env.docker.example .env      # isi SECRET_KEY, POSTGRES_PASSWORD, SEED_ADMIN_PASSWORD, SEED_CUSTOMER_PASSWORD
+docker compose up -d --build
+```
+
+App hanya dibuka di `127.0.0.1:${APP_PORT}` (default 8080). Domain dan HTTPS diurus Caddy yang terpasang di VPS, cukup tambahkan ke `/etc/caddy/Caddyfile` lalu `sudo systemctl reload caddy`:
+
+```
+toko.domainmu.com {
+	reverse_proxy 127.0.0.1:8080
+}
+```
+
+Dengan `RUN_SEED=true`, backend mengisi kategori, produk, serta akun `admin@example.com` dan `customer@example.com` dengan password dari `SEED_ADMIN_PASSWORD` / `SEED_CUSTOMER_PASSWORD` (backend menolak start kalau password kosong). Akun hanya dibuat sekali; setelah deploy pertama set `RUN_SEED=false`.
+
+Kalau backend dan frontend di-deploy terpisah (mis. backend di Railway, frontend di layanan lain), build frontend dengan URL publik backend dan isi `CORS_ORIGINS` di backend:
+
+```bash
+docker build -t nook-frontend --build-arg VITE_API_BASE_URL=https://api.domainmu.com ./frontend
+```
+
 ## Variabel Lingkungan
 
 **`backend/.env`**

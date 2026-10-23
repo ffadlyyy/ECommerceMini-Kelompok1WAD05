@@ -1,370 +1,141 @@
-
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { request } from '@/services/api'
-import { useAuthStore } from '@/stores/auth'
+import { computed, onMounted, ref } from 'vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import ErrorMessage from '@/components/ui/ErrorMessage.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import OrderDetail from '@/components/order/OrderDetail.vue'
+import OrderStatusBadge from '@/components/order/OrderStatusBadge.vue'
+import { USE_MOCK } from '@/services/productService'
+import { useOrderStore } from '@/stores/order'
+import { formatDateTime, formatRupiah } from '@/utils/format'
+import { ORDER_STATUSES } from '@/utils/orderStatus'
 
-const router = useRouter()
-const auth = useAuthStore()
+const store = useOrderStore()
+const filter = ref('')
+const expanded = ref(new Set())
 
-const orders = ref([])
-const loading = ref(true)
-const errorMessage = ref('')
+onMounted(() => store.fetchOrders())
 
-const formatPrice = (value) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value ?? 0)
+// Tab filter hanya untuk status yang benar-benar ada di riwayat user
+const tabs = computed(() => [
+  { value: '', label: 'Semua', count: store.orders.length },
+  ...ORDER_STATUSES.map((s) => ({ ...s, count: store.orders.filter((o) => o.status === s.value).length })).filter((t) => t.count),
+])
+const visible = computed(() => (filter.value ? store.orders.filter((o) => o.status === filter.value) : store.orders))
 
-const formatDate = (value) => {
-  if (!value) return '-'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '-'
-
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
+function toggle(id) {
+  const next = new Set(expanded.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  expanded.value = next
 }
 
-const statusLabel = (status) => ({
-  pending: 'Menunggu pembayaran',
-  paid: 'Sudah dibayar',
-  completed: 'Selesai',
-  cancelled: 'Dibatalkan',
-}[status] || status)
-
-const paymentLabel = (status) => ({
-  unpaid: 'Belum dibayar',
-  paid: 'Lunas',
-  failed: 'Pembayaran gagal',
-}[status] || status)
-
-const statusClass = (status) => ({
-  pending: 'pending',
-  paid: 'paid',
-  completed: 'completed',
-  cancelled: 'cancelled',
-}[status] || 'default')
-
-async function loadOrders() {
-  errorMessage.value = ''
-  loading.value = true
-
-  if (!auth.token) {
-    await router.replace({
-      name: 'login',
-      query: { redirect: '/orders' },
-    })
-    loading.value = false
-    return
-  }
-
-  try {
-    const result = await request('/orders')
-    orders.value = Array.isArray(result) ? result : []
-  } catch (error) {
-    errorMessage.value = error.message || 'Gagal memuat riwayat pesanan.'
-  } finally {
-    loading.value = false
-  }
+const itemSummary = (order) => {
+  const [first, ...rest] = order.items
+  if (!first) return ''
+  return rest.length ? `${first.name} dan ${rest.length} barang lain` : first.name
 }
-
-onMounted(loadOrders)
 </script>
 
 <template>
-  <section class="container orders-page">
-    <div class="page-heading">
-      <div>
-        <p class="eyebrow">AKUN SAYA</p>
-        <h1>Riwayat Pesanan</h1>
-        <p class="subtitle">
-          Lihat pesanan dan status pembayaranmu di Nook.
-        </p>
+  <section class="container orders">
+    <header class="orders__head">
+      <h1>Riwayat pesanan</h1>
+      <p>Semua transaksi yang pernah kamu lakukan, terbaru di atas.</p>
+    </header>
+
+    <LoadingSpinner v-if="store.loading" label="Memuat pesanan…" />
+    <ErrorMessage v-else-if="store.error" :message="store.error" @retry="store.fetchOrders()" />
+    <EmptyState v-else-if="!store.orders.length" title="Belum ada pesanan" description="Pesanan yang kamu buat setelah checkout akan muncul di sini.">
+      <BaseButton :to="{ name: 'catalog' }">Mulai belanja</BaseButton>
+    </EmptyState>
+
+    <template v-else>
+      <div class="orders__tabs" role="group" aria-label="Filter status pesanan">
+        <button
+          v-for="t in tabs"
+          :key="t.value"
+          type="button"
+          class="orders__tab"
+          :aria-pressed="filter === t.value"
+          @click="filter = t.value"
+        >
+          {{ t.label }} <span class="orders__tab-count">{{ t.count }}</span>
+        </button>
       </div>
 
-      <button class="outline-button" @click="loadOrders" :disabled="loading">
-        {{ loading ? 'Memuat...' : 'Muat ulang' }}
-      </button>
-    </div>
-
-    <div v-if="loading" class="state-panel">
-      Memuat riwayat pesanan...
-    </div>
-
-    <div v-else-if="errorMessage" class="state-panel error" role="alert">
-      <p>{{ errorMessage }}</p>
-      <button class="outline-button" @click="loadOrders">Coba lagi</button>
-    </div>
-
-    <div v-else-if="orders.length === 0" class="state-panel empty">
-      <h2>Belum ada pesanan</h2>
-      <p>Pesanan yang kamu buat akan muncul di halaman ini.</p>
-      <button class="primary-button" @click="router.push({ name: 'catalog' })">
-        Jelajahi katalog
-      </button>
-    </div>
-
-    <div v-else class="orders-list">
-      <article v-for="order in orders" :key="order.id" class="order-card">
-        <div class="order-header">
-          <div>
-            <p class="order-number">Pesanan #{{ order.id }}</p>
-            <p class="order-date">{{ formatDate(order.created_at) }}</p>
-          </div>
-
-          <span class="status-badge" :class="statusClass(order.status)">
-            {{ statusLabel(order.status) }}
-          </span>
-        </div>
-
-        <div class="order-items">
-          <div
-            v-for="item in order.items"
-            :key="item.id"
-            class="order-item"
-          >
-            <div>
-              <h3>{{ item.name }}</h3>
-              <p>{{ item.quantity }} × {{ formatPrice(item.price) }}</p>
+      <ul class="orders__list">
+        <li v-for="o in visible" :key="o.id" class="order">
+          <div class="order__head">
+            <div class="order__id">
+              <h2>Pesanan #{{ o.id }}</h2>
+              <time :datetime="o.created_at">{{ formatDateTime(o.created_at) }}</time>
             </div>
-            <strong>{{ formatPrice(item.line_total) }}</strong>
-          </div>
-        </div>
-
-        <div class="order-footer">
-          <div>
-            <p class="payment-label">Pembayaran</p>
-            <strong>{{ paymentLabel(order.payment_status) }}</strong>
+            <OrderStatusBadge :status="o.status" />
           </div>
 
-          <div class="order-total">
-            <p>Total pesanan</p>
-            <strong>{{ formatPrice(order.total_amount) }}</strong>
+          <div class="order__summary">
+            <p class="order__items">{{ itemSummary(o) }}</p>
+            <p class="order__total">{{ formatRupiah(o.total_amount) }}</p>
           </div>
-        </div>
 
-        <div v-if="order.shipping_address" class="shipping-info">
-          <h3>Alamat pengiriman</h3>
-          <p>{{ order.shipping_name }} · {{ order.shipping_phone }}</p>
-          <p>{{ order.shipping_address }}</p>
-          <p>{{ order.shipping_city }}, {{ order.shipping_postal_code }}</p>
-        </div>
-      </article>
-    </div>
+          <div v-if="o.status === 'pending'" class="order__pending">
+            <p class="order__note">
+              {{ o.payment_status === 'failed' ? 'Pembayaran sebelumnya gagal. Silakan coba bayar lagi.' : 'Pesanan menunggu pembayaran.' }}
+            </p>
+            <!-- Data mock tidak ada di backend, jadi tombol bayar hanya untuk pesanan asli -->
+            <BaseButton v-if="!USE_MOCK" size="sm" :to="{ name: 'order-payment', params: { id: o.id } }">Bayar sekarang</BaseButton>
+          </div>
+
+          <button
+            type="button"
+            class="order__toggle"
+            :aria-expanded="expanded.has(o.id)"
+            :aria-controls="`order-${o.id}`"
+            @click="toggle(o.id)"
+          >
+            {{ expanded.has(o.id) ? 'Sembunyikan rincian' : 'Lihat rincian' }}
+          </button>
+          <div v-if="expanded.has(o.id)" :id="`order-${o.id}`" class="order__detail">
+            <OrderDetail :order="o" />
+          </div>
+        </li>
+      </ul>
+    </template>
   </section>
 </template>
 
 <style scoped>
-.orders-page {
-  padding-top: var(--space-6);
-  padding-bottom: var(--space-8);
-}
+.orders { padding-top: var(--space-7); padding-bottom: var(--space-8); display: flex; flex-direction: column; gap: var(--space-5); max-width: 860px; }
+.orders__head h1 { font-size: clamp(30px, 4vw, 42px); }
+.orders__head p { color: var(--color-ink-soft); margin-top: var(--space-2); }
 
-.page-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: var(--space-6);
+.orders__tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.orders__tab {
+  padding: 8px 14px; border-radius: var(--radius-pill);
+  border: 1px solid var(--color-line); background: var(--color-surface);
+  font-size: 13.5px; transition: border-color var(--transition);
 }
+.orders__tab:hover { border-color: var(--color-ink-soft); }
+.orders__tab[aria-pressed='true'] { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-on-ink); }
+.orders__tab-count { opacity: 0.7; font-variant-numeric: tabular-nums; }
 
-.eyebrow {
-  margin-bottom: 8px;
-  color: #81745e;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-}
-
-h1 {
-  font-size: 32px;
-}
-
-.subtitle {
-  margin-top: 10px;
-  color: var(--color-ink-soft);
-  line-height: 1.6;
-}
-
-.orders-list {
-  display: grid;
-  gap: 20px;
-}
-
-.order-card,
-.state-panel {
-  padding: 24px;
+.orders__list { display: flex; flex-direction: column; gap: var(--space-4); }
+.order {
+  padding: var(--space-5);
+  background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  display: flex; flex-direction: column; gap: var(--space-3);
 }
-
-.order-header,
-.order-footer,
-.order-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.order-header {
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--color-line);
-}
-
-.order-number {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.order-date,
-.order-item p,
-.payment-label,
-.order-total p {
-  margin-top: 6px;
-  color: var(--color-ink-soft);
-  font-size: 13px;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 7px 11px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #eeeae1;
-  color: #514b3d;
-}
-
-.status-badge.pending {
-  background: #fff0cf;
-  color: #805600;
-}
-
-.status-badge.paid,
-.status-badge.completed {
-  background: #e2f4e8;
-  color: #24663b;
-}
-
-.status-badge.cancelled {
-  background: #fce7e7;
-  color: #9d2525;
-}
-
-.order-items {
-  display: grid;
-  gap: 16px;
-  padding: 20px 0;
-}
-
-.order-item h3 {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.order-footer {
-  align-items: center;
-  padding-top: 18px;
-  border-top: 1px solid var(--color-line);
-}
-
-.order-total {
-  text-align: right;
-}
-
-.order-total strong {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 20px;
-}
-
-.shipping-info {
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--color-line);
-  line-height: 1.7;
-}
-
-.shipping-info h3 {
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.shipping-info p {
-  color: var(--color-ink-soft);
-  font-size: 13px;
-}
-
-.state-panel {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.state-panel h2 {
-  margin-bottom: 10px;
-}
-
-.state-panel p {
-  margin-bottom: 18px;
-  line-height: 1.6;
-}
-
-.error {
-  color: #b42318;
-}
-
-.primary-button,
-.outline-button {
-  padding: 11px 16px;
-  border-radius: 8px;
-  font: inherit;
-  cursor: pointer;
-}
-
-.primary-button {
-  margin-top: 18px;
-  border: 0;
-  background: #39372e;
-  color: white;
-}
-
-.outline-button {
-  border: 1px solid var(--color-line);
-  background: transparent;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-@media (max-width: 600px) {
-  .page-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .order-card {
-    padding: 18px;
-  }
-
-  .order-header,
-  .order-footer,
-  .order-item {
-    gap: 12px;
-  }
-
-  .status-badge {
-    max-width: 130px;
-    text-align: center;
-  }
-}
+.order__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.order__id h2 { font-size: 20px; }
+.order__id time { font-size: 13px; color: var(--color-ink-soft); }
+.order__summary { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
+.order__items { color: var(--color-ink-soft); font-size: 14px; min-width: 0; }
+.order__total { font-weight: 600; font-size: 16px; white-space: nowrap; }
+.order__pending { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.order__note { font-size: 13px; color: var(--color-accent); }
+.order__toggle { align-self: flex-start; font-size: 13.5px; text-decoration: underline; text-underline-offset: 3px; }
+.order__detail { padding-top: var(--space-3); border-top: 1px solid var(--color-line); }
 </style>

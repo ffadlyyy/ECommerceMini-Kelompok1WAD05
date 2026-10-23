@@ -1,4 +1,6 @@
+import os
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, Base, engine
 from app.models import Category, Product, Review, Order, OrderItem, User
@@ -39,9 +41,10 @@ REVIEWS = [
     {"product_id": 7, "user_name": "Hendra W.", "rating": 3, "comment": "Kualitas bagus tapi harganya cukup tinggi, pengiriman agak lama."},
 ]
 
+# Password default hanya untuk development lokal; di server isi lewat env (lihat docker-entrypoint.sh)
 SEED_USERS = [
-    {"full_name": "Admin Toko", "email": "admin@example.com", "password": "admin12345", "role": "admin"},
-    {"full_name": "Customer Demo", "email": "customer@example.com", "password": "customer12345", "role": "customer"},
+    {"full_name": "Admin Toko", "email": "admin@example.com", "password": os.getenv("SEED_ADMIN_PASSWORD") or "admin12345", "role": "admin"},
+    {"full_name": "Customer Demo", "email": "customer@example.com", "password": os.getenv("SEED_CUSTOMER_PASSWORD") or "customer12345", "role": "customer"},
 ]
 
 def seed_users(db: Session):
@@ -92,6 +95,20 @@ def seed_data(db: Session):
             OrderItem(order_id=o3.id, product_id=3, quantity=1, price=290000),
         ])
         db.commit()
+
+    _sync_pg_sequences(db)
+
+def _sync_pg_sequences(db: Session):
+    # Seed memakai id eksplisit, jadi sequence PostgreSQL harus dimajukan
+    # supaya INSERT berikutnya (mis. admin tambah produk) tidak bentrok di id=1.
+    if db.bind.dialect.name != "postgresql":
+        return
+    for table in ("categories", "products", "reviews", "orders", "order_items"):
+        db.execute(text(
+            f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
+            f"COALESCE((SELECT MAX(id) FROM {table}), 0) + 1, false)"
+        ))
+    db.commit()
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

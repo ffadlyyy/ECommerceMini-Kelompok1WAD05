@@ -29,6 +29,51 @@ Kontrak data ada di [`../docs/api-contract-frontend.md`](../docs/api-contract-fr
 
 Filter katalog disimpan di URL: `/products?q=lampu&category=pencahayaan&sort=price_asc&page=2`.
 
+## Cakupan Task 2 (Autentikasi, frontend)
+
+| Tugas | Lokasi |
+|---|---|
+| Halaman masuk & daftar | `views/LoginView.vue`, `views/RegisterView.vue`, `components/auth/AuthCard.vue` |
+| Sesi (token JWT + data akun dari `GET /auth/me`) | `stores/auth.js`, `services/authService.js` |
+| Proteksi route (login, role admin, halaman khusus tamu) | `router/index.js` |
+| Token kedaluwarsa → sesi dibersihkan otomatis | `services/api.js` (`setUnauthorizedHandler`) |
+
+Login dan daftar **selalu memakai API asli**, juga saat `VITE_USE_MOCK=true`, jadi backend harus jalan.
+Setelah login, `?redirect=` membawa user kembali ke halaman asal (hanya path internal, lihat `utils/redirect.js`).
+Akun demo dari seed backend: `admin@example.com` / `admin12345` dan `customer@example.com` / `customer12345`.
+
+## Cakupan Task 4 (Keranjang, Checkout, Pembayaran)
+
+| Tugas | Lokasi |
+|---|---|
+| Keranjang (ubah jumlah, hapus, subtotal, peringatan stok) | `views/CartView.vue`, `stores/cart.js` |
+| Checkout (form alamat + ringkasan, total dihitung server) | `views/CheckoutView.vue` |
+| Simulasi pembayaran (berhasil / gagal lalu coba lagi) | `views/PaymentView.vue` (`/orders/:id/payment`) |
+| API | `services/cartService.js` (`/cart`, `/orders/checkout`, `/orders/{id}/pay`) |
+
+- **Tamu** tetap bisa menambah barang; keranjangnya disimpan di `localStorage`. Saat login, isinya
+  dipindahkan ke keranjang server (barang yang stoknya tidak cukup dilewati dan diberi tahu).
+- **Sudah login**: semua lewat API `/cart`. Keranjang, checkout, dan pembayaran selalu memakai API asli.
+- Pesanan `pending` di riwayat punya tombol **Bayar sekarang** (tidak muncul untuk data mock).
+
+## Cakupan Task 5 (Admin Dashboard & Riwayat Pesanan)
+
+| Tugas | Lokasi |
+|---|---|
+| Ringkasan admin: angka penjualan, grafik pendapatan harian, pendapatan per kategori | `views/admin/AdminDashboardView.vue`, `components/admin/SalesChart.vue`, `CategorySalesBars.vue`, `StatTile.vue` |
+| Tabel CRUD produk (tambah, ubah, hapus, cari, halaman) | `views/admin/AdminProductsView.vue`, `components/admin/ProductFormModal.vue` |
+| Manajemen status pesanan | `views/admin/AdminOrdersView.vue` |
+| Riwayat pesanan customer | `views/OrdersView.vue` |
+| Data & API | `stores/admin.js`, `stores/order.js`, `services/adminService.js`, `services/orderService.js` (+ versi mock) |
+| Label & alur status | `utils/orderStatus.js` (harus sama dengan `STATUS_TRANSITIONS` di `backend/app/routers/admin.py`) |
+
+Route: `/orders` (butuh login), `/admin`, `/admin/products`, `/admin/orders` (butuh admin).
+Guard di `router/index.js` hanya untuk UX; keamanan tetap di backend (401/403). Di mode mock
+(`VITE_USE_MOCK=true`) guard dilewati supaya halaman bisa didemokan tanpa login.
+
+Alur status pesanan: `pending` → `paid` → `shipped` → `completed`; `pending`/`paid` bisa `cancelled`
+(stok dikembalikan). Grafik bisa dibaca lewat hover/fokus keyboard dan tombol **Lihat sebagai tabel**.
+
 ## Komponen bersama (boleh dipakai semua anggota)
 
 | Komponen | Fungsi |
@@ -53,10 +98,10 @@ Filter katalog disimpan di URL: `/products?q=lampu&category=pencahayaan&sort=pri
 
 | File | Pemilik | Status |
 |---|---|---|
-| `stores/auth.js` | Fadly (Task 2) | stub — pertahankan `isAuthenticated`, `isAdmin`, `user` |
-| `stores/cart.js` | Arico (Task 4) | stub localStorage — pertahankan `totalItems`, `addItem(product, qty)` |
-| `router/index.js` | bersama | route `login`, `register`, `cart`, `checkout`, `orders`, `admin` masih placeholder; ganti `component`-nya, jangan ubah `name` |
-| `layouts/AdminLayout.vue` | Siwi (Task 5) | kerangka siap diisi menu |
+| `stores/auth.js` | Task 2 | memakai API asli — tetap sediakan `isAuthenticated`, `isAdmin`, `user.name` |
+| `stores/cart.js` | Task 4 | API `/cart` (login) atau localStorage (tamu) — `addItem(product, qty)` sekarang async dan melempar error stok |
+| `router/index.js` | bersama | jangan ubah `name` route karena dipakai navbar dan tombol |
+| `layouts/AdminLayout.vue` | Task 5 | menu Ringkasan, Produk, Pesanan |
 
 ## Struktur
 
@@ -66,11 +111,15 @@ src/
 ├── components/
 │   ├── ui/          komponen dasar reusable
 │   ├── layout/      AppHeader, AppFooter
-│   └── product/     komponen khusus produk
+│   ├── product/     komponen khusus produk
+│   ├── auth/        kartu form login/daftar
+│   ├── admin/       grafik, stat tile, form produk
+│   └── order/       badge status, rincian pesanan
 ├── layouts/         MainLayout, AdminLayout
-├── views/           Home, Catalog, ProductDetail, Placeholder, NotFound
-├── stores/          product (milik Ridho), auth & cart (stub)
-├── services/        api.js, productService.js, mockProductService.js
+├── views/           Home, Catalog, ProductDetail, Login, Register, Cart, Checkout, Payment, Orders, NotFound
+│   └── admin/       AdminDashboard, AdminProducts, AdminOrders
+├── stores/          product (milik Ridho), auth (Task 2), cart (Task 4), admin & order (Task 5)
+├── services/        api.js, authService.js, cartService.js, product/order/adminService.js + versi mock
 ├── mocks/           data contoh
 ├── router/
 ├── utils/           format, debounce
