@@ -38,3 +38,49 @@ export const seedReviews = [
   { id: 5, product_id: 7, user_name: 'Laras K.', rating: 5, comment: 'Teksturnya mewah dan duduknya empuk tapi tetap padat.', created_at: '2026-09-12T16:30:00Z' },
   { id: 6, product_id: 7, user_name: 'Hendra W.', rating: 3, comment: 'Kualitas bagus tapi harganya cukup tinggi, pengiriman agak lama.', created_at: '2026-09-28T11:05:00Z' },
 ]
+
+// Pesanan contoh. Bentuknya = respons GET /admin/orders (GET /orders sama, tanpa customer_*).
+// Pelanggan demo (customer@example.com) = akun yang "login" di mode mock.
+export const DEMO_CUSTOMER = { name: 'Pelanggan Demo', email: 'customer@example.com' }
+const customers = {
+  demo: DEMO_CUSTOMER,
+  dewi: { name: 'Dewi Anggraini', email: 'dewi@example.com' },
+  raka: { name: 'Raka Pratama', email: 'raka@example.com' },
+}
+const address = {
+  demo: { shipping_name: 'Pelanggan Demo', shipping_phone: '081234567890', shipping_address: 'Jl. Mawar No. 1', shipping_city: 'Bogor', shipping_postal_code: '16111' },
+  dewi: { shipping_name: 'Dewi Anggraini', shipping_phone: '081298765432', shipping_address: 'Jl. Kenanga No. 8', shipping_city: 'Bandung', shipping_postal_code: '40115' },
+  raka: { shipping_name: 'Raka Pratama', shipping_phone: '081377788899', shipping_address: 'Jl. Melati No. 21', shipping_city: 'Depok', shipping_postal_code: '16424' },
+}
+
+let nextItemId = 1
+function order(id, created_at, status, payment_status, who, lines) {
+  const items = lines.map(([productId, quantity]) => {
+    const p = products.find((x) => x.id === productId)
+    return { id: nextItemId++, product_id: p.id, name: p.name, quantity, price: p.price, line_total: p.price * quantity }
+  })
+  return {
+    id,
+    status,
+    payment_status,
+    total_amount: items.reduce((sum, it) => sum + it.line_total, 0),
+    created_at,
+    ...address[who],
+    items,
+    customer_name: customers[who].name,
+    customer_email: customers[who].email,
+  }
+}
+
+export const seedOrders = [
+  order(1, '2026-10-03T09:15:00Z', 'completed', 'paid', 'demo', [[1, 1]]),
+  order(2, '2026-10-04T13:40:00Z', 'completed', 'paid', 'dewi', [[2, 1], [9, 2]]),
+  order(3, '2026-10-06T08:05:00Z', 'completed', 'paid', 'raka', [[3, 2]]),
+  order(4, '2026-10-06T19:22:00Z', 'cancelled', 'refunded', 'dewi', [[11, 1]]),
+  order(5, '2026-10-08T10:30:00Z', 'shipped', 'paid', 'demo', [[6, 1], [4, 1]]),
+  order(6, '2026-10-09T15:12:00Z', 'shipped', 'paid', 'raka', [[13, 1], [12, 1]]),
+  order(7, '2026-10-10T11:48:00Z', 'paid', 'paid', 'dewi', [[7, 1]]),
+  order(8, '2026-10-11T07:55:00Z', 'paid', 'paid', 'demo', [[5, 2], [8, 1]]),
+  order(9, '2026-10-12T16:20:00Z', 'pending', 'unpaid', 'raka', [[14, 1]]),
+  order(10, '2026-10-12T18:02:00Z', 'pending', 'failed', 'demo', [[3, 1], [1, 1]]),
+]

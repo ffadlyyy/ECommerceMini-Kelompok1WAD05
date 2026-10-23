@@ -22,6 +22,7 @@ export const iconSets = {
       alert: [['circle', { cx: 12, cy: 12, r: 9 }], ['line', { x1: 12, y1: 7.5, x2: 12, y2: 13 }], ['line', { x1: 12, y1: 16.5, x2: 12, y2: 16.6 }]],
       star: [['path', { d: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z' }]],
       box: [['path', { d: 'M4 8l8-4 8 4v8l-8 4-8-4V8z' }], ['path', { d: 'M4 8l8 4 8-4M12 12v8' }]],
+      logout: [['path', { d: 'M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4' }], ['path', { d: 'M10 8l-4 4 4 4' }], ['line', { x1: 6, y1: 12, x2: 15, y2: 12 }]],
     },
   },
   // Ikon kategori, kunci = slug kategori
