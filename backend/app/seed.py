@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, Base, engine
 from app.models import Category, Product, Review, Order, OrderItem, User
@@ -92,6 +93,20 @@ def seed_data(db: Session):
             OrderItem(order_id=o3.id, product_id=3, quantity=1, price=290000),
         ])
         db.commit()
+
+    _sync_pg_sequences(db)
+
+def _sync_pg_sequences(db: Session):
+    # Seed memakai id eksplisit, jadi sequence PostgreSQL harus dimajukan
+    # supaya INSERT berikutnya (mis. admin tambah produk) tidak bentrok di id=1.
+    if db.bind.dialect.name != "postgresql":
+        return
+    for table in ("categories", "products", "reviews", "orders", "order_items"):
+        db.execute(text(
+            f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
+            f"COALESCE((SELECT MAX(id) FROM {table}), 0) + 1, false)"
+        ))
+    db.commit()
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
